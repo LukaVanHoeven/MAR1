@@ -101,18 +101,18 @@ disp.plot(ax=axes[0])
 axes[0].tick_params(axis='x', rotation=45)
 #plot loss
 axes[1].plot(history.history['loss'], label='Training Loss')
-axes[1].plot(history.history['val_loss'], label='Validation Loss')
+axes[1].plot(history.history['val_loss'], label='Test Loss')
 axes[1].set_xlabel('Epoch')
 axes[1].set_ylabel('Loss')
-axes[1].set_title('Training and Validation Loss')
+axes[1].set_title('Training and Test Loss')
 axes[1].legend()
 
 # make a plot of the accuracy
 axes[2].plot(history.history['accuracy'], label='Training Accuracy')
-axes[2].plot(history.history['val_accuracy'], label='Validation Accuracy')
+axes[2].plot(history.history['val_accuracy'], label='Test Accuracy')
 axes[2].set_xlabel('Epoch')
 axes[2].set_ylabel('Accuracy')
-axes[2].set_title('Training and Validation Accuracy')
+axes[2].set_title('Training and Test Accuracy')
 axes[2].legend()
 
 plt.show()
