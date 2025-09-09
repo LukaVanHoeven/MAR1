@@ -32,8 +32,6 @@ for i in range(len(cleaned_data)):
 tokenizer = Tokenizer(oov_token="OUTOFVOCAB")
 tokenizer.fit_on_texts(sentences)
 
-
-
 #There are 15 output types, for clarification sake we make a dictionary so we can map them properly
 output_types = {
     "ack": 0,
@@ -62,7 +60,7 @@ with open('./sequential/output_types.pickle', 'wb') as handle:
     
 #We convert the sentences into the bag of words format
 #This is a vector of size vocabulary+1, where each position indicates how many times the word was used in the sentence
-x = tokenizer.texts_to_matrix(sentences)
+x = tokenizer.texts_to_matrix(sentences, mode='count')
 y = to_categorical([output_types[label] for label in labels], num_classes=15)
 
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2)

@@ -26,7 +26,7 @@ model: Sequential = load_model('./sequential/seqmodel.keras')
 input_neuron_amount = len(tokenizer.word_index) + 1  # +1 for OUTOFVOCAB
 
 #Tokanize the sentence using the saved tokenizer
-tokenized_sentence = tokenizer.texts_to_matrix([sentence])
+tokenized_sentence = tokenizer.texts_to_matrix([sentence], mode='count')
 
 #Predict the label
 prediction = model.predict(tokenized_sentence)
