@@ -12,11 +12,12 @@ During training it shows its accuracy and after training a confusion matrix is s
 
 infer_sequential.py is a file which infers the network with a test sentence. It uses the output types and the tokanizer so this is the same for both the training and the inferring process.
 
-Rule-based:
+baseline_rulebased.py:The rule based system uses a dictionary with the labels acting as keys in the dictionary and the values of the dictionary contain arrays off words. The input is then matched against the words in the array, the key/label of the first match it finds is then returned as output.
 
 Cli (Bas)
 
-Majorityclass (done):
+majorityclass.py:
+Gives the label of the majority (inform)
 
 Confusion matrix, accuracy
 CLI tool
