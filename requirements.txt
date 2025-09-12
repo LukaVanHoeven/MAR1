@@ -1,4 +1,5 @@
-keras
+tensorflow
 matplotlib
 scikit-learn
 numpy
+pandas

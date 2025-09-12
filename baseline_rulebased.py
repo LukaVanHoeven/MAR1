@@ -1,5 +1,3 @@
-import pandas as pd
-
 #Dialog act rules dictionary
 rules = {
         "thankyou" : ["thank you", "thanks", "thank"],
@@ -18,12 +16,8 @@ rules = {
         "null" : ["cough"]
 }
 
-ds_train = pd.read_csv("train_dedup.csv")
-
-pred = []
-
 #Function to classify an utterance with a dialog act using the rules dictionary
-def matching(text):
+def rulebased(text):
     t= text.split()
     for dialog_act, words in rules.items():
         for word in words:
@@ -35,36 +29,3 @@ def matching(text):
                    return dialog_act
     return "inform"
 
-#Apply the rule-based classifier to each utterance 
-for i, row in ds_train.iterrows():
-    txt = row["text"]
-    p = matching(txt)
-    pred.append(p)
-
-#New dataframe with the real dialog act and the predicted dialog act for each utterance
-results = pd.DataFrame({
-    "text": ds_train["text"],
-    "train_dialogact": ds_train["label"],
-    "predicted_dialogact": pred
-})
-
-results.to_csv("predictions_rulebased.csv", index=False)
-
-#Compute accuracy
-correctly_labeled_inst = 0
-tot_inst = 0
-for train, predicted in zip(results["train_dialogact"], results["predicted_dialogact"]):
-    tot_inst += 1
-    if train == predicted:
-        correctly_labeled_inst += 1
-accuracy = correctly_labeled_inst / tot_inst
-print (accuracy)
-
-#User prompt that returns the dialog act for the given utterance
-user_input = ""
-while user_input != "exit":
-    user_input = input("Write your sentence> ").strip().lower()
-    if user_input == "exit":
-        break
-    predicted_dialogact = matching(user_input)
-    print(predicted_dialogact)
