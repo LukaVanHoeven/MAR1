@@ -1,9 +1,12 @@
 import pandas as pd
+import numpy as np
 from train_sequential import train_sequential
 from baseline_majority_class import majority_class
 from baseline_rulebased import rulebased
 from ML_sequential import sequential
 from ML_logreg import logreg, train_and_eval
+from sklearn.metrics import classification_report
+from collections import defaultdict
 
 
 def main():
@@ -35,7 +38,7 @@ def main():
     acc_logreg_orig = accuracy_ML_logreg(logreg, orig_test, model_logreg_orig)
     acc_logreg_dedup = accuracy_ML_logreg(logreg, dedup_test, model_logreg_dedup)
 
-    # System comparison
+    # System comparison, chosen for accuracy as it's an easy to use metric to globally represent model performance
     print("\n---------------------\nSystem comparison:\n")
     print("Model accuracies on models trained/tested on original data")
     print(f"Rule-based baseline = {acc_rulebased_orig * 100}%")
@@ -49,6 +52,9 @@ def main():
     print(f"Sequential ML = {acc_sequential_dedup * 100}%")
     print(f"Logreg ML = {acc_logreg_dedup * 100}%")
     print("---------------------\n")
+
+    # Error analysis
+    error_analysis(orig_test)
 
     # User input loop
     models = [
@@ -101,10 +107,110 @@ def main():
 
             print(f"The predicted label is: {label}\n\n")
 
-    # Error analysis
+
+def error_analysis(data):
+    labels = data['label'].tolist()
+    sentences = data['text'].tolist()
+
+    results_dialogue_acts = {}
+    difficult_utterances = {}
+
+    models = [
+        "Rule-based baseline", 
+        "Majority baseline", 
+        "Sequential ML trained on original data",
+        "Sequential ML trained on deduplicated data", 
+        "Logreg ML trained on original data",
+        "Logreg ML trained on deduplicated data"
+    ]
+
+    predictions = np.array([
+        [rulebased(sentence) for sentence in sentences],
+        [majority_class(sentence) for sentence in sentences],
+        sequential(sentences, "sequential_orig.keras", "sequential_orig.pickle"),
+        sequential(sentences, "sequential_dedup.keras", "sequential_dedup.pickle"),
+        logreg(sentences, "logreg_orig.joblib"),
+        logreg(sentences, "logreg_dedup.joblib")
+    ])
     
+    for model, prediction in zip(models, predictions):
+        report = classification_report(labels, prediction, output_dict=True, zero_division=0)
+        
+        # Difficult dialogue acts per model
+        # Chosen for f1 since it takes both recall and precision into account
+        sorted_report = sorted(
+            [
+                (
+                    dialogue_act, report[dialogue_act]['f1-score']
+                ) for dialogue_act in report if dialogue_act not in (
+                    'accuracy',
+                    'macro avg',
+                    'weighted avg'
+                )
+            ],
+            key=lambda x: x[1]
+        )
+
+        results_dialogue_acts[model] = sorted_report
+
+        # Difficult utterances per model
+        wrong_utterances = [
+            (
+                sentences[i],
+                labels[i],
+                prediction[i]
+            ) for i in range(len(labels)) if labels[i] != prediction[i]
+        ]
+        difficult_utterances[model] = wrong_utterances
     
-    # Difficult cases
+    # Difficult dialogue_acts for all models combined
+    dialogue_act_scores = []
+    for model in models:
+        dialogue_act_scores.extend(results_dialogue_acts[model])
+
+    avg_scores = defaultdict(list)
+    for dialogue_act, score in dialogue_act_scores:
+        avg_scores[dialogue_act].append(score)
+
+    avg_scores = {
+        dialogue_act: sum(scores) / len(scores) for dialogue_act, scores in avg_scores.items()
+    }
+    avg_scores_sorted = sorted(avg_scores.items(), key=lambda x: x[1])
+
+    # Difficult utterances for all models
+    hard_utterances = []
+    for i, label in enumerate(labels):
+        all_sentence_preds = predictions[:, i]
+        if all(pred != label for pred in all_sentence_preds):
+            hard_utterances.append((sentences[i], label, all_sentence_preds))
+
+    # Printing
+    # Hardest dialogue acts per model
+    print("\n---------------------")
+    for model in models:
+        print(f"--Hardest dialogue act for {model}:")
+        for dialogue_act, score in results_dialogue_acts[model]:
+            print(f"{dialogue_act} -- F1 = {score}")
+
+    # Hardest utterances per model
+    print("\n---------------------")
+    for model in models:
+        print(f"--Hardest utterances for {model}")
+        # Only show the 3 most difficult
+        for utterance, label, prediction in difficult_utterances[model][:3]:
+            print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
+
+    # Hardest dialogue acts for all models
+    print("\n---------------------")
+    print("--Hardest dialogue acts for all models")
+    for dialogue_act, score in avg_scores_sorted:
+        print(f"{dialogue_act} -- average F1 = {score}")
+    
+    # Utterances that went wrong for all models
+    print("\n---------------------")
+    print("--Utterances that went wrong for all models")
+    for utterance, label, prediction in hard_utterances:
+        print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
     
 
 def accuracy_baseline(func, testset):
