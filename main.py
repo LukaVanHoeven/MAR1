@@ -211,7 +211,49 @@ def error_analysis(data):
     print("--Utterances that went wrong for all models")
     for utterance, label, prediction in hard_utterances:
         print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
-    
+
+#list of examples of difficult cases
+#two types: mispelling and negation
+utterances_difficult_cases = {
+    "cna you find an italian restaurant" : "request", 
+    "coul u send me the adress?" : "request",
+    "i need mre informations" : "reqmore",
+    "i don't want italian restaurant" : "deny",
+    "i don't want other information" : "deny",
+    "i don't need other suggestions" : "deny"
+}
+
+def difficult_cases(utterances_difficult_cases):
+
+    models = [
+        "Rule-based baseline", 
+        "Majority baseline", 
+        "Sequential ML trained on original data",
+        "Sequential ML trained on deduplicated data", 
+        "Logreg ML trained on original data",
+        "Logreg ML trained on deduplicated data"
+    ]
+
+    utterances = list(utterances_difficult_cases.keys())
+    labels = list(utterances_difficult_cases.values())
+
+    predictions = np.array([
+        [rulebased(u) for u in utterances],
+        [majority_class(u) for u in utterances],
+        sequential(utterances, "sequential_orig.keras", "sequential_orig.pickle"),
+        sequential(utterances, "sequential_dedup.keras", "sequential_dedup.pickle"),
+        logreg(utterances, "logreg_orig.joblib"),
+        logreg(utterances, "logreg_dedup.joblib")
+    ])
+
+    #comparing of the same utterance across all models
+    #showing the true label and each model's predicted label
+    for i in range(len(models)):
+        print("Model:",{models[i]})
+        pred_system = predictions[i] 
+        for j in range(len(utterances)):
+            print("Utterance:", {utterances[j]}, "Label:", {labels[j]}, "Prediction:", {pred_system[j]})
+        
 
 def accuracy_baseline(func, testset):
     correct = 0
