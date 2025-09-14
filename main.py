@@ -56,6 +56,20 @@ def main():
     # Error analysis
     error_analysis(orig_test)
 
+    # Difficult cases
+    #list of examples of difficult cases
+    #two types: mispelling and negation
+    utterances_difficult_cases = {
+        "cna you find an italian restaurant" : "request", 
+        "coul u send me the adress?" : "request",
+        "i need mre informations" : "reqmore",
+        "i don't want italian restaurant" : "deny",
+        "i don't want other information" : "deny",
+        "i don't need other suggestions" : "deny"
+    }
+
+    difficult_cases(utterances_difficult_cases)
+
     # User input loop
     models = [
         "Rule-based baseline", 
@@ -212,16 +226,6 @@ def error_analysis(data):
     for utterance, label, prediction in hard_utterances:
         print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
 
-#list of examples of difficult cases
-#two types: mispelling and negation
-utterances_difficult_cases = {
-    "cna you find an italian restaurant" : "request", 
-    "coul u send me the adress?" : "request",
-    "i need mre informations" : "reqmore",
-    "i don't want italian restaurant" : "deny",
-    "i don't want other information" : "deny",
-    "i don't need other suggestions" : "deny"
-}
 
 def difficult_cases(utterances_difficult_cases):
 
@@ -248,11 +252,13 @@ def difficult_cases(utterances_difficult_cases):
 
     #comparing of the same utterance across all models
     #showing the true label and each model's predicted label
+    print("\n---------------------")
+    print("--Difficult Cases")
     for i in range(len(models)):
-        print("Model:",{models[i]})
+        print(f"--Model: {models[i]}")
         pred_system = predictions[i] 
         for j in range(len(utterances)):
-            print("Utterance:", {utterances[j]}, "Label:", {labels[j]}, "Prediction:", {pred_system[j]})
+            print(f"Utterance: {utterances[j]}, Label: {labels[j]} Prediction: {pred_system[j]}")
         
 
 def accuracy_baseline(func, testset):
