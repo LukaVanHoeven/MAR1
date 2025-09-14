@@ -99,6 +99,7 @@ def train_and_eval(train_csv: str, test_csv: str, out_model: str,
     cm_csv = out_path.with_name(out_path.stem + "_cm.csv")
     cm_df.to_csv(cm_csv, index=True)
     print(f"Confusion matrix -> {cm_csv}")
+    return out_model
 
 def infer_loop(model_path: str, topk: int):
     """
@@ -122,7 +123,6 @@ def infer_loop(model_path: str, topk: int):
 
         Xw = wv.transform([s])
         if cv is not None:
-            from scipy.sparse import hstack
             Xc = cv.transform([s])
             X  = hstack([Xw, Xc])
         else:
@@ -136,6 +136,17 @@ def infer_loop(model_path: str, topk: int):
             classes = clf.classes_
             pairs = sorted(zip(classes, proba), key=lambda t: t[1], reverse=True)[:topk]
             print("top-{}: {}".format(topk, ", ".join(f"{c}:{p:.3f}" for c, p in pairs)))
+
+def logreg(data, model_path: str):
+    bundle = joblib.load(model_path)
+    clf = bundle["model"]
+    wv  = bundle["word_vec"]
+
+    Xw = wv.transform(data)
+    
+    pred = clf.predict(Xw)
+    
+    return pred
 
 # ---------- CLI ----------
 def main():

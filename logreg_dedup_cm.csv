@@ -1,0 +1,15 @@
+,pred:inform,pred:request,pred:reqalts,pred:affirm,pred:negate,pred:confirm,pred:thankyou,pred:hello,pred:bye,pred:ack,pred:deny,pred:repeat,pred:restart,pred:reqmore
+true:inform,434,3,17,0,0,4,0,1,0,0,0,0,0,0
+true:request,4,135,1,0,1,1,0,0,0,1,0,1,0,0
+true:reqalts,3,1,61,0,0,0,0,0,0,0,1,0,0,0
+true:affirm,5,0,0,20,0,0,0,0,0,0,0,0,0,0
+true:negate,0,0,1,0,18,0,0,0,1,0,0,0,0,0
+true:confirm,1,0,0,0,0,16,0,0,0,0,0,0,0,0
+true:thankyou,0,0,0,0,0,0,9,0,3,0,0,0,0,0
+true:hello,1,0,0,0,0,0,0,8,0,0,0,0,0,0
+true:bye,0,0,0,0,0,0,1,0,5,0,0,0,0,0
+true:ack,1,0,0,0,0,0,0,0,0,2,0,0,0,0
+true:deny,1,0,0,0,0,0,0,0,0,0,0,0,0,1
+true:repeat,0,0,0,0,0,0,0,0,0,0,0,2,0,0
+true:restart,0,0,0,0,0,0,0,0,0,0,0,0,1,0
+true:reqmore,0,0,0,0,0,0,0,0,0,0,0,0,0,0
