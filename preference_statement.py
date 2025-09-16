@@ -24,6 +24,7 @@ def parse_preference_statement(input):
     Returns:
         dict: A dictionary with the user's preferences for food, area, and price range.
     """
+    
     result = {
         "food": None,
         "area": None,
