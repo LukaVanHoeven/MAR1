@@ -16,6 +16,6 @@ class Transition:
         - next_state (str): The state the system moves to.
     """
     original_state: str
-    dialogue_act: str
+    dialogue_act: list[str]
     next_state: str
-    condition: Callable[[], bool] = field(default=lambda: True)
+    condition: Callable[[], bool] = field(default=lambda d: True)
