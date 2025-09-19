@@ -4,7 +4,7 @@ import preference_statement
 
 class Dialogue_management_system:
     """
-    
+    A class to manage the dialogue system for restaurant recommendations.
     """
 
     def __init__(
@@ -93,7 +93,7 @@ class Dialogue_management_system:
             case "ask_food", False:
                 print("What kind of food would you like?")
             case "give_suggestion", False:
-                if self.available_suggestions:
+                if len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop()
                     print(f"I have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.")
                 else:
