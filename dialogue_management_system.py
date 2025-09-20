@@ -1,7 +1,8 @@
 from transition import Transition
 from typing import Callable
 import preference_statement
-
+import pandas as pd
+from train_sequential import train_sequential
 class Dialogue_management_system:
     """
     A class to manage the dialogue system for restaurant recommendations.
@@ -66,7 +67,7 @@ class Dialogue_management_system:
                     self.food = value
 
     def loop(self):
-        print("Hello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?")
+        print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
         while True:
             user = input(">").lower()
             if user == "exit" or user == "end_conversation":
@@ -85,40 +86,44 @@ class Dialogue_management_system:
     def print_next_conversation_step(self, repeat=False):
         match self.current_state, repeat:
             case "welcome", False:
-                print("Hello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?")
+                print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
             case "ask_area", False:
-                print("In which area would you like to eat?")
+                print("\033[93mIn which area would you like to eat?\033[0m")
             case "ask_pricerange", False:
-                print("What price range are you looking for?")
+                print("\033[93mWhat price range are you looking for?\033[0m")
             case "ask_food", False:
-                print("What kind of food would you like?")
+                print("\033[93mWhat kind of food would you like?\033[0m")
             case "give_suggestion", False:
                 if len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop()
-                    print(f"I have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.")
+                    print(f"\033[93mI have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
                 else:
-                    print("I am sorry, I do not have any more suggestions that match your criteria.")
+                    print("\033[93mI am sorry, I do not have any more suggestions that match your criteria.\033[0m")
             case "pick_suggested_or_restart", False:
-                print("Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?")
+                print("\033[93mUnfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?\033[0m")
             case "end_conversation", False:
-                print("Thank you for using the Cambridge restaurant system. Goodbye!")
+                print("\033[93mThank you for using the Cambridge restaurant system. Goodbye!\033[0m")
             case "welcome", True:
-                print("I am sorry, I did not understand that. How may I help you?")
+                print("\033[93mI am sorry, I did not understand that. How may I help you?\033[0m")
             case "ask_area", True:
-                print("I am sorry, I did not understand that. In which area would you like to eat?")
+                print("\033[93mI am sorry, I did not understand that. In which area would you like to eat?\033[0m")
             case "ask_pricerange", True:
-                print("I am sorry, I did not understand that. What price range are you looking for (cheap, moderate or expensive)?")
+                print("\033[93mI am sorry, I did not understand that. What price range are you looking for (cheap, moderate or expensive)?\033[0m")
             case "ask_food", True:
-                print("I am sorry, we do not have that kind of food. What kind of food would you like?")
+                print("\033[93mI am sorry, we do not have that kind of food. What kind of food would you like?\033[0m")
             case "give_suggestion", True:
-                print(f"I have found another restaurant that matches your preferences. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.")
+                print(f"\033[93mI have found another restaurant that matches your preferences. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
             case "pick_suggested_or_restart", True:
-                print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?")
+                print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?\033[0m")
             case "end_conversation", True:
-                print("I am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!")
+                print("\033[93mI am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!\033[0m")
 
 if __name__ == "__main__":
     from ML_sequential import sequential
+    import argparse
+    parser = argparse.ArgumentParser(description="Run the Dialogue Management System.")
+    parser.add_argument("--train", action="store_true", help="Train the model before running the dialogue system")
+    args = parser.parse_args()
 
     transitions = [
         Transition(original_state="welcome", dialogue_act=["hello"], next_state="ask_area"),
@@ -164,7 +169,12 @@ if __name__ == "__main__":
         # If the user does not like the last offered suggestion it goes back to the welcome state
         Transition(original_state="pick_suggested_or_restart", dialogue_act=["deny", "negate", "restart"], next_state="welcome"),
     ]
-
+    
+    #Train the sequential model so we have something to use (Mainly for being able to just run 1 file for handing in the assignment)
+    if args.train:
+        orig_train = pd.read_csv("train_orig.csv")
+        model_sequential_orig, tokenizer_sequential_orig = train_sequential("sequential_orig", orig_train)
+    
     dms = Dialogue_management_system(sequential, transitions, "welcome")
     dms.loop()
     
