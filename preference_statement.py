@@ -14,6 +14,23 @@ class PreferenceStatement:
 
         self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types
         self.threshold_distance = 2
+        self.data = pd.read_csv("restaurant_info.csv")
+        
+    def find_matching_restaurants(self, area, food, pricerange) -> list:
+        """
+        This function finds restaurants that match the given preferences for area, food, and price range.
+        """
+        matching_restaurants = self.data
+        if area:
+            if area != "any":
+                matching_restaurants = matching_restaurants[matching_restaurants['area'] == area]
+        if food:
+            if food != "any":
+                matching_restaurants = matching_restaurants[matching_restaurants['food'] == food]
+        if pricerange:
+            if pricerange != "any":
+                matching_restaurants = matching_restaurants[matching_restaurants['pricerange'] == pricerange]
+        return matching_restaurants['restaurantname'].tolist()
 
     def parse_preference_statement(self, input):
         """This function parses the user input in the form of a string, and returns a dictionary with the user's preferences for food, area, and price range.

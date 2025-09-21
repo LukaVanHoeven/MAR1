@@ -7,7 +7,6 @@ class Dialogue_management_system:
     """
     A class to manage the dialogue system for restaurant recommendations.
     """
-
     def __init__(
             self, 
             classifier_func: Callable, 
@@ -15,25 +14,32 @@ class Dialogue_management_system:
             start_state: str
         ):
         """
-        
+        The constructor for Dialogue_management_system class.
+        @params:
+            - classifier_func (Callable): A function that takes in a user utterance and returns a dialogue act.
+            - transitions (list[Transition]): A list of Transition objects that define the possible transitions in the dialogue system.
+            - start_state (str): The state the system starts in.
         """
         self.classifier = classifier_func
         self.transitions = transitions
         self.current_state = start_state
         
-        self.available_suggestions = ["dummy1", "dummy2", "dummy3"]
+        self.available_suggestions = []
+        self.gathered_suggestions = False
 
         self.pricerange = None
         self.area = None
         self.food = None 
         
-        self.preference_extractor = preference_statement.PreferenceStatement().parse_preference_statement
-        
+        self.preference_statement = preference_statement.PreferenceStatement()
+        self.preference_extractor = self.preference_statement.parse_preference_statement
+
         self.available_suggestions = []
 
     def state_transition(self, user_utterance: str):
         """
-        
+        This function takes in a user utterance and returns the next state of the dialogue system.
+        It uses the classifier function to classify the user utterance into a dialogue act.
         """
         # Classify using trained model
         dialogue_act = self.classifier(
@@ -46,7 +52,11 @@ class Dialogue_management_system:
 
         # Find patterns for pricerange, area, food.
         self.extract_preferences(user_utterance)
-
+        
+        if self.pricerange and self.area and self.food and not self.gathered_suggestions:
+            self.gathered_suggestions = True
+            self.available_suggestions = self.preference_statement.find_matching_restaurants(self.area, self.food, self.pricerange)
+            
         for transition in self.transitions:
             if transition.original_state == self.current_state and dialogue_act in transition.dialogue_act:
                 if transition.condition(self):
@@ -56,6 +66,9 @@ class Dialogue_management_system:
         return self.current_state
 
     def extract_preferences(self, user_utterance: str):
+        """
+        This function extracts the user's preferences for food, area, and price range from their utterance.
+        """
         statement_parser = self.preference_extractor(user_utterance)
         for key, value in statement_parser.items():
             if value is not None:  # only update if we got something useful
@@ -67,6 +80,9 @@ class Dialogue_management_system:
                     self.food = value
 
     def loop(self):
+        """
+        This function starts the dialogue loop, allowing the user to interact with the system.
+        """
         print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
         while True:
             user = input(">").lower()
@@ -76,14 +92,15 @@ class Dialogue_management_system:
             
             next_state = self.state_transition(user)
 
-            # HERE we should have a checker for possible suggestions 
             self.print_next_conversation_step(previous_state == next_state)
-            self.area = "west"
             print(f"USER: {user}")
             print(f"NEXT_STATE: {next_state}")
             print("------------------")
             
     def print_next_conversation_step(self, repeat=False):
+        """
+        This function prints the next step in the conversation based on the current state and whether it is a repeat.
+        """
         match self.current_state, repeat:
             case "welcome", False:
                 print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
@@ -95,7 +112,7 @@ class Dialogue_management_system:
                 print("\033[93mWhat kind of food would you like?\033[0m")
             case "give_suggestion", False:
                 if len(self.available_suggestions) > 0:
-                    suggestion = self.available_suggestions.pop()
+                    suggestion = self.available_suggestions.pop(0)
                     print(f"\033[93mI have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
                 else:
                     print("\033[93mI am sorry, I do not have any more suggestions that match your criteria.\033[0m")
@@ -112,7 +129,11 @@ class Dialogue_management_system:
             case "ask_food", True:
                 print("\033[93mI am sorry, we do not have that kind of food. What kind of food would you like?\033[0m")
             case "give_suggestion", True:
-                print(f"\033[93mI have found another restaurant that matches your preferences. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
+                if len(self.available_suggestions) > 0:
+                    suggestion = self.available_suggestions.pop(0)
+                    print(f"\033[93mI have found another restaurant that matches your preferences called {suggestion}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
+                else:
+                    print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.\033[0m")
             case "pick_suggested_or_restart", True:
                 print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?\033[0m")
             case "end_conversation", True:
