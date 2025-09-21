@@ -19,7 +19,7 @@ Run dialogue_management_system.py to run the interactive system without training
 
 ## File descriptions
 
-dialogue_management_system.py: Contains the code for the dialogue management system, including the user interaction loop, inferring the models and calling the code for extracting preferences.
+main.py: Contains the code for the dialogue management system, including the user interaction loop, inferring the models and calling the code for extracting preferences.
 
 preference_statement.py: Contains a class for both the extraction of preferences from a sentence as well as getting the restaurants from the restaurant_info.csv file.
 
