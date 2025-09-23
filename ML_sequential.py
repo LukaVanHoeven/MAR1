@@ -30,7 +30,7 @@ def sequential(data, model, tokenizer):
 
     tokenized_sentences = tokenizer.texts_to_matrix(data, mode='count')
 
-    predictions = model.predict(tokenized_sentences)
+    predictions = model.predict(tokenized_sentences, verbose=0)
 
     winning_indices = np.argmax(predictions, axis=1)
     return [output_types[i] for i in winning_indices]

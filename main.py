@@ -48,8 +48,6 @@ class Dialogue_management_system:
             "sequential_orig.pickle"
         )[0]
 
-        print(f"{dialogue_act = }")
-
         # Find patterns for pricerange, area, food.
         self.extract_preferences(user_utterance)
         
@@ -85,17 +83,26 @@ class Dialogue_management_system:
         """
         print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
         while True:
+            
             user = input(">").lower()
             if user == "exit" or user == "end_conversation":
                 break
+            
+            if self.current_state == "welcome":
+                self.pricerange = None
+                self.area = None
+                self.food = None 
+                self.available_suggestions = []
+                self.gathered_suggestions = False
+                
             previous_state = self.current_state
             
             next_state = self.state_transition(user)
 
+            
             self.print_next_conversation_step(previous_state == next_state)
-            print(f"USER: {user}")
-            print(f"NEXT_STATE: {next_state}")
-            print("------------------")
+            if next_state == "end_conversation":
+                break
             
     def print_next_conversation_step(self, repeat=False):
         """
@@ -117,7 +124,7 @@ class Dialogue_management_system:
                 else:
                     print("\033[93mI am sorry, I do not have any more suggestions that match your criteria.\033[0m")
             case "pick_suggested_or_restart", False:
-                print("\033[93mUnfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?\033[0m")
+                print("\033[93mUnfortunately there are no other restaurants matching your criteria. You can either pick the suggested restaurant or start over. Would you like to pick the suggested restaurant?\033[0m")
             case "end_conversation", False:
                 print("\033[93mThank you for using the Cambridge restaurant system. Goodbye!\033[0m")
             case "welcome", True:
@@ -135,7 +142,7 @@ class Dialogue_management_system:
                 else:
                     print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.\033[0m")
             case "pick_suggested_or_restart", True:
-                print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?\033[0m")
+                print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Will you accept the given suggestion or start over?\033[0m")
             case "end_conversation", True:
                 print("\033[93mI am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!\033[0m")
 
@@ -173,7 +180,6 @@ if __name__ == "__main__":
         Transition(original_state="ask_area", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="ask_area"),
         Transition(original_state="ask_pricerange", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="ask_pricerange"),
         Transition(original_state="give_suggestion", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="give_suggestion"),
-        Transition(original_state="pick_suggestion_or_restart", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="pick_suggestion_or_restart"),
 
         # If the user agrees on the suggestion it should move to end conversation
         Transition(original_state="give_suggestion", dialogue_act=["ack", "affirm", "thankyou"], next_state="end_conversation"),
@@ -185,7 +191,8 @@ if __name__ == "__main__":
         Transition(original_state="give_suggestion", dialogue_act=["deny", "negate", "reqalts"], condition=lambda d:len(d.available_suggestions) == 0, next_state="pick_suggested_or_restart"),
 
         # If the user takes the last offered suggestion it ends the conversation
-        Transition(original_state="pick_suggested_or_restart", dialogue_act=["ack", "affirm", "thankyou"], next_state="end_conversation"),
+        Transition(original_state="pick_suggestion_or_restart", dialogue_act=["repeat", "null"], next_state="pick_suggestion_or_restart"),
+        Transition(original_state="pick_suggested_or_restart", dialogue_act=["ack", "affirm", "thankyou", "bye"], next_state="end_conversation"),
         
         # If the user does not like the last offered suggestion it goes back to the welcome state
         Transition(original_state="pick_suggested_or_restart", dialogue_act=["deny", "negate", "restart"], next_state="welcome"),

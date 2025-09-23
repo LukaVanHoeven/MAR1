@@ -13,7 +13,7 @@ class PreferenceStatement:
         }
 
         self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types
-        self.threshold_distance = 2
+        self.threshold_distance = 3
         self.data = pd.read_csv("restaurant_info.csv")
         
     def find_matching_restaurants(self, area, food, pricerange) -> list:
