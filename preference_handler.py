@@ -50,9 +50,22 @@ class PreferenceHandler:
                 "crowdedness": 1,
                 "length_of_stay": 0
             },
-            "tourist": {
+            "touristic": {
                 "food_quality": 1,
                 "crowdedness": 0
+            },
+            "quick meal": {
+                "length_of_stay": 0,
+                "crowdedness": 0
+            },
+            "business": {
+                "food_quality": 1,
+                "length_of_stay": 1
+            },
+            "trashy": {
+                "food_quality": 0,
+                "crowdedness": 1,
+                "length_of_stay": 0
             }
         }
 
@@ -73,9 +86,9 @@ class PreferenceHandler:
         reason = ""
         
         if suffices_all_requirements:
-            reason = f"I found a restaurant which is very {user_requirement},because "
+            reason = f"I found a restaurant which is very {user_requirement},  "
         else:
-            reason = f"I found a restaurant which is somewhat {user_requirement},because "
+            reason = f"I found a restaurant which is somewhat {user_requirement}, "
 
         if "food_quality" in picked_match_parameters:
             reason += f"the food is {'good' if requirements[user_requirement]['food_quality']== 1 else 'average'} and "
@@ -140,26 +153,26 @@ class PreferenceHandler:
         return result
 
 # #Example usage
-# pref = PreferenceStatement()
-# #Test the characteristics function
-# restaurants = [
-#     {
-#         "restaurantname": "The Gourmet Kitchen",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     },
-#     {
-#         "restaurantname": "Family Diner",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     },
-#     {
-#         "restaurantname": "Tourist's Delight",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     }
-# ]
-# print(pref.characteristic_of_restaurant(restaurants, "family-friendly"))
+pref = PreferenceHandler()
+#Test the characteristics function
+restaurants = [
+    {
+        "restaurantname": "The Gourmet Kitchen",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    },
+    {
+        "restaurantname": "Family Diner",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    },
+    {
+        "restaurantname": "Tourist's Delight",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    }
+]
+print(pref.characteristic_of_restaurant(restaurants, "trashy"))
