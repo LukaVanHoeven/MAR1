@@ -40,8 +40,9 @@ class PreferenceHandler:
                 "length_of_stay": 0
             }
         }
+        self.valid_extra_preferences = list(self.possible_extra_requirements.keys())
 
-        self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types
+        self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types, *self.valid_extra_preferences, "any"
         self.threshold_distance = 3
         self.data = pd.read_csv("restaurant_info.csv")
 
@@ -120,7 +121,8 @@ class PreferenceHandler:
         result = {
             "food": None,
             "area": None,
-            "pricerange": None
+            "pricerange": None,
+            "additional": None
         }
         input = input.lower()
 
@@ -149,6 +151,8 @@ class PreferenceHandler:
                 result["food"] = word_to_use
             if word_to_use in self.valid_price_range_types:
                 result["pricerange"] = word_to_use
+            if word_to_use in self.valid_extra_preferences:
+                result["additional"] = word_to_use
 
         return result
 

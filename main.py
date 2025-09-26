@@ -30,6 +30,7 @@ class Dialogue_management_system:
         self.pricerange = None
         self.area = None
         self.food = None 
+        self.additional = None
         
         self.preference_statement = preference_handler.PreferenceHandler()
         self.preference_extractor = self.preference_statement.parse_preference_statement
@@ -76,6 +77,8 @@ class Dialogue_management_system:
                     self.area = value
                 elif key == "food":
                     self.food = value
+                elif key == "additional":
+                    self.additional = value
 
     def loop(self):
         """
