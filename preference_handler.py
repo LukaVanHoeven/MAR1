@@ -11,6 +11,35 @@ class PreferenceHandler:
             "food": ["food", "cuisine"],
             "pricerange": ["price", "pricerange", "pricing"]
         }
+        
+        self.possible_extra_requirements = {
+            "romantic": {
+                "food_quality": 1,
+                "crowdedness": 0,
+                "length_of_stay": 1
+                },
+            "family-friendly": {
+                "crowdedness": 1,
+                "length_of_stay": 0
+            },
+            "touristic": {
+                "food_quality": 1,
+                "crowdedness": 0
+            },
+            "quick meal": {
+                "length_of_stay": 0,
+                "crowdedness": 0
+            },
+            "business": {
+                "food_quality": 1,
+                "length_of_stay": 1
+            },
+            "trashy": {
+                "food_quality": 0,
+                "crowdedness": 1,
+                "length_of_stay": 0
+            }
+        }
 
         self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types
         self.threshold_distance = 3
@@ -40,37 +69,8 @@ class PreferenceHandler:
         """
         This function takes a list of restaurants and a user requirement (e.g., "romantic", "family-friendly") and returns the restaurants that match the requirement and reason.
         """
-        requirements = {
-            "romantic": {
-                "food_quality": 1,
-                "crowdedness": 0,
-                "length_of_stay": 1
-                },
-            "family-friendly": {
-                "crowdedness": 1,
-                "length_of_stay": 0
-            },
-            "touristic": {
-                "food_quality": 1,
-                "crowdedness": 0
-            },
-            "quick meal": {
-                "length_of_stay": 0,
-                "crowdedness": 0
-            },
-            "business": {
-                "food_quality": 1,
-                "length_of_stay": 1
-            },
-            "trashy": {
-                "food_quality": 0,
-                "crowdedness": 1,
-                "length_of_stay": 0
-            }
-        }
-
         # We will make a new list of restaurants with their respective points for each fulfilled requirement
-        restaurants = [(r, self.return_matching(r, requirements[user_requirement])) for r in restaurants]
+        restaurants = [(r, self.return_matching(r, self.possible_extra_requirements[user_requirement])) for r in restaurants]
 
         # If no restaurants match any requirement, return a message
         if all(sum(x[1].values()) == 0 for x in restaurants):
@@ -80,7 +80,7 @@ class PreferenceHandler:
         picked_restaurant = max(restaurants, key=lambda x: sum(x[1].values()))
         picked_match_parameters = picked_restaurant[1]
         
-        max_points = len(requirements[user_requirement])
+        max_points = len(self.possible_extra_requirements[user_requirement])
         suffices_all_requirements = sum(picked_match_parameters.values()) == max_points
         
         reason = ""
@@ -91,13 +91,13 @@ class PreferenceHandler:
             reason = f"I found a restaurant which is somewhat {user_requirement}, "
 
         if "food_quality" in picked_match_parameters:
-            reason += f"the food is {'good' if requirements[user_requirement]['food_quality']== 1 else 'average'} and "
+            reason += f"the food is {'good' if self.possible_extra_requirements[user_requirement]['food_quality']== 1 else 'average'} and "
 
         if "crowdedness" in picked_match_parameters:
-            reason += f"it is {'not crowded' if requirements[user_requirement]['crowdedness']== 0 else 'somewhat crowded'} and "
+            reason += f"it is {'not crowded' if self.possible_extra_requirements[user_requirement]['crowdedness']== 0 else 'somewhat crowded'} and "
 
         if "length_of_stay" in picked_match_parameters:
-            reason += f"the length of stay is {'appropriate' if requirements[user_requirement]['length_of_stay']== 1 else 'long'}. "
+            reason += f"the length of stay is {'appropriate' if self.possible_extra_requirements[user_requirement]['length_of_stay']== 1 else 'long'}. "
 
         if suffices_all_requirements:
             reason += f"Overall, it is a great choice for a {user_requirement} restaurant. " 
@@ -153,26 +153,26 @@ class PreferenceHandler:
         return result
 
 # #Example usage
-pref = PreferenceHandler()
-#Test the characteristics function
-restaurants = [
-    {
-        "restaurantname": "The Gourmet Kitchen",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    },
-    {
-        "restaurantname": "Family Diner",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    },
-    {
-        "restaurantname": "Tourist's Delight",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    }
-]
-print(pref.characteristic_of_restaurant(restaurants, "trashy"))
+# pref = PreferenceHandler()
+# #Test the characteristics function
+# restaurants = [
+#     {
+#         "restaurantname": "The Gourmet Kitchen",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     },
+#     {
+#         "restaurantname": "Family Diner",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     },
+#     {
+#         "restaurantname": "Tourist's Delight",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     }
+# ]
+# print(pref.characteristic_of_restaurant(restaurants, "trashy"))
