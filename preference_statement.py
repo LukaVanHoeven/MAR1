@@ -15,7 +15,7 @@ class PreferenceStatement:
         self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types
         self.threshold_distance = 3
         self.data = pd.read_csv("restaurant_info.csv")
-        
+
     def find_matching_restaurants(self, area, food, pricerange) -> list:
         """
         This function finds restaurants that match the given preferences for area, food, and price range.
@@ -31,38 +31,67 @@ class PreferenceStatement:
             if pricerange != "any":
                 matching_restaurants = matching_restaurants[matching_restaurants['pricerange'] == pricerange]
         return matching_restaurants['restaurantname'].tolist()
-    
+
+    def return_matching(self, restaurant, requirements):
+        #This function returns a dictionary which contains true if a requirement is met, false otherwise
+        return {req[0]: restaurant[req[0]] == req[1] for req in requirements.items()}
+
     def characteristic_of_restaurant(self, restaurants: list, user_requirement):
         """
         This function takes a list of restaurants and a user requirement (e.g., "romantic", "family-friendly") and returns the restaurants that match the requirement and reason.
-        """ 
-        ## Note to self on how to improve: make a list of reasons why a restaurant is romantic, family-friendly, touristy, etc. and use that to match the restaurants instead of hardcoding it here. Also more useful for the "reason" part of the return value.
-        original_restaurants = restaurants.copy()
+        """
+        requirements = {
+            "romantic": {
+                "food_quality": 1,
+                "crowdedness": 0,
+                "length_of_stay": 1
+                },
+            "family-friendly": {
+                "crowdedness": 1,
+                "length_of_stay": 0
+            },
+            "tourist": {
+                "food_quality": 1,
+                "crowdedness": 0
+            }
+        }
+
+        # We will make a new list of restaurants with their respective points for each fulfilled requirement
+        restaurants = [(r, self.return_matching(r, requirements[user_requirement])) for r in restaurants]
+
+        # If no restaurants match any requirement, return a message
+        if all(sum(x[1].values()) == 0 for x in restaurants):
+            return "", "I am sorry, but I could not find any restaurants that match your requirement."
+
+        # Pick the restaurant with the highest number of matched requirements
+        picked_restaurant = max(restaurants, key=lambda x: sum(x[1].values()))
+        picked_match_parameters = picked_restaurant[1]
+        
+        max_points = len(requirements[user_requirement])
+        suffices_all_requirements = sum(picked_match_parameters.values()) == max_points
+        
         reason = ""
-        match user_requirement:
-            case "romantic":
-                restaurants = [r for r in restaurants if r.length_of_stay == 1 and r.crowdedness == 0]
-            case "family-friendly":
-                restaurants = [r for r in restaurants if r.crowdedness == 1 and r.length_of_stay == 0]        
-            case "tourist": 
-                restaurants = [r for r in restaurants if r.food_quality == 1 and r.crowdedness == 0]
-                
-        if len(restaurants) == 0:
-            match user_requirement:
-                case "romantic":
-                    restaurants = [r for r in original_restaurants if r.length_of_stay == 1 or r.crowdedness == 0]
-                case "family-friendly":
-                    restaurants = [r for r in original_restaurants if r.crowdedness == 1 or r.length_of_stay == 0]
-                case "tourist": 
-                    restaurants = [r for r in original_restaurants if r.food_quality == 1 or r.crowdedness == 0]
-            if len(restaurants) == 0:
-                return "", "I am sorry, but I could not find any restaurants that match your requirement."
-            else:
-                picked_restaurant = restaurants[0]
-                reason = f"I did not find a restaurant that is entirely {user_requirement}, but it partially suffices. {picked_restaurant.name} is {user_requirement} because it is {'a must-visit' if picked_restaurant.food_quality == 1 else 'not a must-visit'}, it is {'busy' if picked_restaurant.crowdedness == 1 else 'not busy'}, and the average length of stay is {'long' if picked_restaurant.length_of_stay == 1 else 'short'}."
+        
+        if suffices_all_requirements:
+            reason = f"I found a restaurant which is very {user_requirement},because "
         else:
-            picked_restaurant = restaurants[0]
-            reason = f"{picked_restaurant.name} is {user_requirement} because it is {'a must-visit' if picked_restaurant.food_quality == 1 else 'not a must-visit'}, it is {'busy' if picked_restaurant.crowdedness == 1 else 'not busy'}, and the average length of stay is {'long' if picked_restaurant.length_of_stay == 1 else 'short'}."
+            reason = f"I found a restaurant which is somewhat {user_requirement},because "
+
+        if "food_quality" in picked_match_parameters:
+            reason += f"the food is {'good' if requirements[user_requirement]['food_quality']== 1 else 'average'} and "
+
+        if "crowdedness" in picked_match_parameters:
+            reason += f"it is {'not crowded' if requirements[user_requirement]['crowdedness']== 0 else 'somewhat crowded'} and "
+
+        if "length_of_stay" in picked_match_parameters:
+            reason += f"the length of stay is {'appropriate' if requirements[user_requirement]['length_of_stay']== 1 else 'long'}. "
+
+        if suffices_all_requirements:
+            reason += f"Overall, it is a great choice for a {user_requirement} restaurant. " 
+        else:
+            positive_aspects = [k.replace('_', ' ') for k, v in picked_match_parameters.items() if v]
+            negative_aspects = [k.replace('_', ' ') for k, v in picked_match_parameters.items() if not v]
+            reason += f"It is {user_requirement} because of the {', '.join(positive_aspects)}, but it is not because of the {', '.join(negative_aspects)}. "
             
         return picked_restaurant, reason
 
@@ -81,19 +110,19 @@ class PreferenceStatement:
             "pricerange": None
         }
         input = input.lower()
-        
+
         for index, word in enumerate(input.split(" ")):
             #Levenshtein distance to the closest valid word for every valid word
             word_to_use = word.lower()
 
             distances = [Levenshtein.distance(word, w) for w in self.valid_words]
             min_distance = min(distances)
-            
+
             #If the distance is smaller than some threshold, we consider it a valid word and use the corrected version
             if min_distance < self.threshold_distance:
                 smallest_index = distances.index(min_distance)
                 word_to_use = self.valid_words[smallest_index]
-            
+
             if word_to_use == "any":
                 word_after_any = input.split(" ")[index + 1]
                 for category, words in self.category_words.items():
@@ -107,5 +136,29 @@ class PreferenceStatement:
                 result["food"] = word_to_use
             if word_to_use in self.valid_price_range_types:
                 result["pricerange"] = word_to_use
-                
+
         return result
+
+pref = PreferenceStatement()
+#Test the characteristics function
+restaurants = [
+    {
+        "restaurantname": "The Gourmet Kitchen",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    },
+    {
+        "restaurantname": "Family Diner",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    },
+    {
+        "restaurantname": "Tourist's Delight",
+        "food_quality": 0,
+        "crowdedness": 1,
+        "length_of_stay": 1
+    }
+]
+print(pref.characteristic_of_restaurant(restaurants, "family-friendly"))
