@@ -1,7 +1,7 @@
 import pandas as pd
 import Levenshtein
 
-class PreferenceStatement:
+class PreferenceHandler:
     def __init__(self):
         self.valid_food_types = ('british', 'modern european', 'italian', 'romanian', 'seafood', 'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese', 'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai', 'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan', 'international', 'traditional', 'mediterranean', 'polynesian', 'african', 'turkish', 'bistro', 'north american', 'australasian', 'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan')
         self.valid_area_types = ("centre", "south", "north", "east", "west")
@@ -139,26 +139,27 @@ class PreferenceStatement:
 
         return result
 
-pref = PreferenceStatement()
-#Test the characteristics function
-restaurants = [
-    {
-        "restaurantname": "The Gourmet Kitchen",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    },
-    {
-        "restaurantname": "Family Diner",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    },
-    {
-        "restaurantname": "Tourist's Delight",
-        "food_quality": 0,
-        "crowdedness": 1,
-        "length_of_stay": 1
-    }
-]
-print(pref.characteristic_of_restaurant(restaurants, "family-friendly"))
+# #Example usage
+# pref = PreferenceStatement()
+# #Test the characteristics function
+# restaurants = [
+#     {
+#         "restaurantname": "The Gourmet Kitchen",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     },
+#     {
+#         "restaurantname": "Family Diner",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     },
+#     {
+#         "restaurantname": "Tourist's Delight",
+#         "food_quality": 0,
+#         "crowdedness": 1,
+#         "length_of_stay": 1
+#     }
+# ]
+# print(pref.characteristic_of_restaurant(restaurants, "family-friendly"))

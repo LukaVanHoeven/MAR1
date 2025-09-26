@@ -1,6 +1,6 @@
 from transition import Transition
 from typing import Callable
-import preference_statement
+import preference_handler
 import pandas as pd
 from train_sequential import train_sequential
 class Dialogue_management_system:
@@ -31,7 +31,7 @@ class Dialogue_management_system:
         self.area = None
         self.food = None 
         
-        self.preference_statement = preference_statement.PreferenceStatement()
+        self.preference_statement = preference_handler.PreferenceHandler()
         self.preference_extractor = self.preference_statement.parse_preference_statement
 
         self.available_suggestions = []
