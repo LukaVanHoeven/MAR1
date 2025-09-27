@@ -1,14 +1,145 @@
 from transition import Transition
-from ML_sequential import sequential
+from typing import Callable
+import preference_handler
+import pandas as pd
 from train_sequential import train_sequential
 
-import preference_handler
-import argparse
-import time
 
-import pandas as pd
-from typing import Callable
+# --- Part 1c: minimal reasoning helpers (6 rules) ---
 
+import random  # already present? keep a single import
+
+def infer_props(candidate: dict):
+    """
+    Apply the 6 inference rules (assignment Part 1c).
+    Uses candidate fields:
+      - pricerange: "cheap"/"moderate"/"expensive"
+      - food: cuisine string (e.g., "romanian")
+      - crowdedness: 0/1   (1=busy)
+      - length_of_stay: 0/1 (1=long)
+      - food_quality: 0/1   (1=good)
+    Returns (derived, trace).
+    Conflict policy:
+      - romantic: long_stay=1 (romantic=True) overrides busy=1 (romantic=False).
+      - touristic: (cheap AND good food) has higher specificity than “romanian”.
+    """
+    derived, trace = {}, []
+
+    pricerange = str(candidate.get("pricerange", "")).lower()
+    food       = str(candidate.get("food", "")).lower()
+    busy       = int(candidate.get("crowdedness", 0))
+    longstay   = int(candidate.get("length_of_stay", 0))
+    goodfood   = int(candidate.get("food_quality", 0))
+
+    # R5: busy -> romantic=False
+    if busy == 1:
+        derived["romantic"] = False
+        trace.append("romantic=False (busy) [R5]")
+
+    # R6: long stay -> romantic=True  (overrides R5)
+    if longstay == 1:
+        derived["romantic"] = True
+        trace.append("romantic=True (long stay) [R6 overrides R5]")
+
+    # R4: long stay -> children=False
+    if longstay == 1:
+        derived["children"] = False
+        trace.append("children=False (long stay) [R4]")
+
+    # R3: busy -> assigned_seats=True
+    if busy == 1:
+        derived["assigned_seats"] = True
+        trace.append("assigned_seats=True (busy) [R3]")
+
+    # R1: cheap AND good food -> touristic=True
+    if pricerange == "cheap" and goodfood == 1:
+        derived["touristic"] = True
+        trace.append("touristic=True (cheap AND good food) [R1]")
+
+    # R2: romanian -> touristic=False (unless R1 already set True)
+    if food == "romanian":
+        if derived.get("touristic") is not True:
+            derived["touristic"] = False
+            trace.append("touristic=False (romanian) [R2]")
+        else:
+            trace.append("touristic stays True (R1 more specific than R2)")
+
+    return derived, trace
+
+
+def parse_additional_requirements(text: str) -> dict:
+    """
+    Parse free text into desired consequents.
+    Accepts phrases like: "romantic", "assigned seats", "not touristic", "no children".
+    Returns dict with booleans or None if not mentioned.
+    """
+    t = text.lower()
+
+    def want(flag: str):
+        if f"not {flag}" in t or f"no {flag}" in t or f"{flag}=false" in t:
+            return False
+        if flag in t or f"{flag}=true" in t or f"need {flag}" in t or f"with {flag}" in t:
+            return True
+        return None
+
+    assigned = want("assigned seats")
+    if assigned is None:
+        assigned = want("assigned_seats")
+
+    return {
+        "touristic":      want("touristic"),
+        "assigned_seats": assigned,
+        "children":       want("children"),
+        "romantic":       want("romantic"),
+    }
+
+
+def rank_by_additional_requirements(candidates: list, user_req: dict, top_k: int = 3):
+    """
+    For each candidate:
+      1) infer_props()  — derive touristic/assigned_seats/children/romantic
+      2) count matches vs user_req (ignore None)
+    Return (top_k candidates, explanations list).
+    If the user gave no additional requirements, return the first top_k.
+    """
+    if all(v is None for v in user_req.values()):
+        expl = [{"name": c.get("name", "<restaurant>"), "why": ["no additional requirements given"]}
+                for c in candidates[:top_k]]
+        return candidates[:top_k], expl
+
+    scored = []
+    for c in candidates:
+        derived, trace = infer_props(c)
+        matches, notes = 0, []
+
+        for k, want in user_req.items():
+            if want is None:
+                continue
+            have = derived.get(k)
+            if have is None:
+                notes.append(f"{k}: undetermined (no decisive rule)")
+            elif have == want:
+                matches += 1
+                notes.append(f"{k}: OK (derived {have})")
+            else:
+                notes.append(f"{k}: NO (derived {have}, user wants {want})")
+
+        scored.append((matches, notes, trace, c))
+
+    scored.sort(key=lambda t: t[0], reverse=True)
+
+    # As in the example in the assignment, break ties randomly among best
+    if scored:
+        best = [t for t in scored if t[0] == scored[0][0]]
+        random.shuffle(best)
+        top = best[:top_k]
+    else:
+        top = []
+
+    explanations = []
+    for m, notes, trace, c in top:
+        explanations.append({"name": c.get("name", "<restaurant>"), "why": trace + notes})
+    return [c for _, _, _, c in top], explanations
 
 class Dialogue_management_system:
     """
@@ -18,10 +149,7 @@ class Dialogue_management_system:
             self, 
             classifier_func: Callable, 
             transitions: list[Transition], 
-            start_state: str,
-            allow_preference_change: bool=False,
-            all_caps: bool=False,
-            system_delay: bool=False
+            start_state: str
         ):
         """
         The constructor for Dialogue_management_system class.
@@ -33,10 +161,6 @@ class Dialogue_management_system:
         self.classifier = classifier_func
         self.transitions = transitions
         self.current_state = start_state
-
-        self.allow_preference_change = allow_preference_change
-        self.all_caps = all_caps
-        self.system_delay = system_delay
         
         self.available_suggestions = []
         self.gathered_suggestions = False
@@ -86,47 +210,19 @@ class Dialogue_management_system:
         for key, value in statement_parser.items():
             if value is not None:  # only update if we got something useful
                 if key == "pricerange":
-                    if self.pricerange is None or self.allow_preference_change:
-                        self.pricerange = value
-                    else:
-                        self._print(
-                            f"\033[93mYou already selected a pricerange " \
-                            f"({self.pricerange}), and changing it is not " \
-                            f"allowed.\033[0m"
-                        )
+                    self.pricerange = value
                 elif key == "area":
-                    if self.area is None or self.allow_preference_change:
-                        self.area = value
-                    else:
-                        self._print(
-                            f"\033[93mYou already selected an area " \
-                            f"({self.area}), and changing it is not " \
-                            f"allowed.\033[0m"
-                        )
+                    self.area = value
                 elif key == "food":
-                    if self.food is None or self.allow_preference_change:
-                        self.food = value
-                    else:
-                        self._print(
-                            f"\033[93mYou already selected a food " \
-                            f"({self.food}), and changing it is not " \
-                            f"allowed.\033[0m"
-                        )
+                    self.food = value
                 elif key == "additional":
-                    if self.additional is None or self.allow_preference_change:
-                        self.additional = value
-                    else:
-                        self._print(
-                            f"\033[93mYou already selected additional preferences " \
-                            f"({self.additional}), and changing it is not " \
-                            f"allowed.\033[0m"
-                        )
+                    self.additional = value
 
     def loop(self):
         """
         This function starts the dialogue loop, allowing the user to interact with the system.
         """
-        self._print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
+        print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
         while True:
             
             user = input(">").lower()
@@ -155,77 +251,49 @@ class Dialogue_management_system:
         """
         match self.current_state, repeat:
             case "welcome", False:
-                self._print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
+                print("\033[93mHello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?\033[0m")
             case "ask_area", False:
-                self._print("\033[93mIn which area would you like to eat?\033[0m")
+                print("\033[93mIn which area would you like to eat?\033[0m")
             case "ask_pricerange", False:
-                self._print("\033[93mWhat price range are you looking for?\033[0m")
+                print("\033[93mWhat price range are you looking for?\033[0m")
             case "ask_food", False:
-                self._print("\033[93mWhat kind of food would you like?\033[0m")
+                print("\033[93mWhat kind of food would you like?\033[0m")
+            case "ask_additional", False:
+                print("\033[93mAny additional requirements? (touristic / assigned seats / children / romantic)\033[0m")
             case "give_suggestion", False:
                 if len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
-                    self._print(f"\033[93mI have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
+                    print(f"\033[93mI have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
                 else:
-                    self._print("\033[93mI am sorry, I do not have any more suggestions that match your criteria.\033[0m")
+                    print("\033[93mI am sorry, I do not have any more suggestions that match your criteria.\033[0m")
             case "pick_suggested_or_restart", False:
-                self._print("\033[93mUnfortunately there are no other restaurants matching your criteria. You can either pick the suggested restaurant or start over. Would you like to pick the suggested restaurant?\033[0m")
+                print("\033[93mUnfortunately there are no other restaurants matching your criteria. You can either pick the suggested restaurant or start over. Would you like to pick the suggested restaurant?\033[0m")
             case "end_conversation", False:
-                self._print("\033[93mThank you for using the Cambridge restaurant system. Goodbye!\033[0m")
+                print("\033[93mThank you for using the Cambridge restaurant system. Goodbye!\033[0m")
             case "welcome", True:
-                self._print("\033[93mI am sorry, I did not understand that. How may I help you?\033[0m")
+                print("\033[93mI am sorry, I did not understand that. How may I help you?\033[0m")
             case "ask_area", True:
-                self._print("\033[93mI am sorry, I did not understand that. In which area would you like to eat?\033[0m")
+                print("\033[93mI am sorry, I did not understand that. In which area would you like to eat?\033[0m")
             case "ask_pricerange", True:
-                self._print("\033[93mI am sorry, I did not understand that. What price range are you looking for (cheap, moderate or expensive)?\033[0m")
+                print("\033[93mI am sorry, I did not understand that. What price range are you looking for (cheap, moderate or expensive)?\033[0m")
             case "ask_food", True:
-                self._print("\033[93mI am sorry, we do not have that kind of food. What kind of food would you like?\033[0m")
+                print("\033[93mI am sorry, we do not have that kind of food. What kind of food would you like?\033[0m")
             case "give_suggestion", True:
                 if len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
-                    self._print(f"\033[93mI have found another restaurant that matches your preferences called {suggestion}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
+                    print(f"\033[93mI have found another restaurant that matches your preferences called {suggestion}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.\033[0m")
                 else:
-                    self._print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.\033[0m")
+                    print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.\033[0m")
             case "pick_suggested_or_restart", True:
-                self._print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Will you accept the given suggestion or start over?\033[0m")
+                print("\033[93mI am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Will you accept the given suggestion or start over?\033[0m")
             case "end_conversation", True:
-                self._print("\033[93mI am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!\033[0m")
-        
-    def _print(self, msg: str):
-        """
-        
-        """
-        if self.all_caps:
-            msg = msg.upper()
-        if self.system_delay:
-            time.sleep()
-        print(msg)
+                print("\033[93mI am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!\033[0m")
+
 if __name__ == "__main__":
-    
+    from ML_sequential import sequential
+    import argparse
     parser = argparse.ArgumentParser(description="Run the Dialogue Management System.")
-    parser.add_argument(
-        "--train",
-        action="store_true",
-        help="Train the model before running the dialogue system"
-    )
-    parser.add_argument(
-        "--allow-preference-change",
-        action="store_true",
-        default=False,
-        help="Allow the user to adjust their preferences (default: False)"
-    )
-    parser.add_argument(
-        "all-caps",
-        action="store_true",
-        default=False,
-        help="Output the response of the system in all caps (default: False)"
-    )
-    parser.add_argument(
-        "system-delay",
-        action="store_true",
-        default=False,
-        help="Add a 1 second delay before each system response (default: False)"
-    )
+    parser.add_argument("--train", action="store_true", help="Train the model before running the dialogue system")
     args = parser.parse_args()
 
     transitions = [
@@ -278,13 +346,6 @@ if __name__ == "__main__":
         orig_train = pd.read_csv("train_orig.csv")
         model_sequential_orig, tokenizer_sequential_orig = train_sequential("sequential_orig", orig_train)
     
-    dms = Dialogue_management_system(
-        sequential,
-        transitions,
-        "welcome",
-        args.allow_preference_change,
-        args.all_caps,
-        args.system_delay
-    )
+    dms = Dialogue_management_system(sequential, transitions, "welcome")
     dms.loop()
     
