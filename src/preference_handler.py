@@ -1,5 +1,7 @@
 import pandas as pd
 import Levenshtein
+from pathlib import Path
+
 
 class PreferenceHandler:
     def __init__(self):
@@ -44,7 +46,8 @@ class PreferenceHandler:
 
         self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types, *self.valid_extra_preferences, "any"
         self.threshold_distance = 3
-        self.data = pd.read_csv("restaurant_info.csv")
+        data_folder = Path(__file__).resolve().parent.parent / "data"
+        self.data = pd.read_csv(data_folder / "restaurant_info.csv")
 
     def find_matching_restaurants(self, area, food, pricerange) -> list:
         """

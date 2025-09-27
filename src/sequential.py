@@ -4,6 +4,9 @@ from keras.utils import to_categorical
 from tensorflow.keras.preprocessing.text import Tokenizer
 from sklearn.model_selection import train_test_split
 import pickle
+import pandas as pd
+import numpy as np
+from keras.models import load_model
 
 
 #There are 15 output types, for clarification sake we make a dictionary so we can map them properly
@@ -25,8 +28,35 @@ output_types = {
     "thankyou": 14
 }
 
+outputs = [
+    "ack", 
+    "affirm", 
+    "bye", 
+    "confirm", 
+    "deny", 
+    "hello",  
+    "inform", 
+    "negate", 
+    "null", 
+    "repeat", 
+    "reqalts", 
+    "reqmore", 
+    "request", 
+    "restart", 
+    "thankyou"
+]
 
-def train_sequential(model_name, df):
+def train_sequential(model_name: str, df: pd.DataFrame)-> tuple[str,str]:
+    """
+    Train the sequential model.
+
+    @param model_name (str): 
+    @param df (pd.Dataframe):
+
+    @return tuple[str,str]: A tuple containing:
+        - The file path containing the sequential model.
+        - The file path containing the corresponding tokenizer. 
+    """
     tokenizer_name = f'{model_name}.pickle'
     sequential_name = f'{model_name}.keras'
 
@@ -76,3 +106,27 @@ def train_sequential(model_name, df):
 
     return sequential_name, tokenizer_name
 
+
+def sequential(data: list[str], model: str, tokenizer: str)-> list[str]:
+    """
+    Infers the sequential model.
+
+    @param data (list[str]): List of all the utterances that need to be
+        classified.
+    @param model (str): The file path containing the sequential model.
+    @param tokenizer (str): The file path containing the corresponding
+        tokenizer. 
+
+    @return list[str]: List containing all the classified labels.
+    """
+    with open(tokenizer, "rb") as f:
+        tokenizer = pickle.load(f)
+
+    model = load_model(model)
+
+    tokenized_sentences = tokenizer.texts_to_matrix(data, mode='count')
+
+    predictions = model.predict(tokenized_sentences, verbose=0)
+
+    winning_indices = np.argmax(predictions, axis=1)
+    return [outputs[i] for i in winning_indices]

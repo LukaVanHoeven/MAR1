@@ -1,10 +1,12 @@
 import os
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
 
 # set up
-inp = "restaurant_info.csv"
-out = "data/restaurant_info.csv"
+data_folder = Path(__file__).resolve().parent.parent / "data"
+inp = data_folder / "restaurant_info.csv"
 
 p_busy, p_long, p_must = 0.50, 0.55, 0.60
 seed = 42
@@ -40,12 +42,12 @@ other_cols = [c for c in merged.columns if c not in new_cols]
 merged = merged[other_cols + new_cols]
 
 # data file
-os.makedirs(os.path.dirname(out), exist_ok=True)
+os.makedirs(os.path.dirname(inp), exist_ok=True)
 
 # save
-merged.to_csv(out, index=False)
+merged.to_csv(inp, index=False)
 
-print(f"✅ Saved to: {os.path.abspath(out)}")
+print(f"✅ Saved to: {os.path.abspath(inp)}")
 print(f"Rows: {len(merged):,} | Key: {key} | "
       f"crowdedness=1: {merged['crowdedness'].mean():.2%}, "
       f"length_of_stay=1: {merged['length_of_stay'].mean():.2%}, "
