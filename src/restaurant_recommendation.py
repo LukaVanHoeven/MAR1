@@ -42,7 +42,7 @@ def recommendation()-> None:
         "--use_baseline",
         action="store_true",
         default=False,
-        help="Use a baseline model instead of a machine learning model."
+        help="Use a baseline model instead of a Machine Learning model."
     )
     args = parser.parse_args()
 
