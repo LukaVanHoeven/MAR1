@@ -5,7 +5,7 @@ import time
 
 from typing import Callable
 
-from rulebased import rulebased
+from .rulebased import rulebased
 
 class Dialogue_management_system:
     """
@@ -85,7 +85,7 @@ class Dialogue_management_system:
             )[0]
 
         # Find patterns for pricerange, area, food.
-        if dialogue_act is "inform":
+        if dialogue_act == "inform":
             self.extract_preferences(user_utterance)
         
         if self.pricerange and self.area and self.food and not self.gathered_suggestions:
@@ -109,7 +109,7 @@ class Dialogue_management_system:
         """
         statement_parser = self.preference_extractor(user_utterance)
         for key, value in statement_parser.items():
-            if value is not None and self.current_state is not "give_suggestion":  # only update if we got something useful
+            if value is not None and self.current_state != "give_suggestion":  # only update if we got something useful
                 if key == "pricerange":
                     if self.pricerange is None or self.allow_preference_change:
                         self.pricerange = value
