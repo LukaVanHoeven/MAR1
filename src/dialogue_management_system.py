@@ -5,6 +5,7 @@ import time
 
 from typing import Callable
 
+from rulebased import rulebased
 
 class Dialogue_management_system:
     """
@@ -17,7 +18,8 @@ class Dialogue_management_system:
             start_state: str,
             allow_preference_change: bool=False,
             all_caps: bool=False,
-            system_delay: bool=False
+            system_delay: bool=False,
+            use_baseline: bool=False
         )-> None:
         """
         The constructor for Dialogue_management_system class.
@@ -37,6 +39,9 @@ class Dialogue_management_system:
         @param system_delay (bool): If True every time the system gives
             an output it will wait 1 second before printing. If False
             the output will be printed ASAP.
+        @param use_baseline (bool): If True the system will use the 
+            rule-based baseline. If False it will use the machine 
+            learning classifier.
         """
         self.classifier = classifier_func
         self.transitions = transitions
@@ -45,6 +50,7 @@ class Dialogue_management_system:
         self.allow_preference_change = allow_preference_change
         self.all_caps = all_caps
         self.system_delay = system_delay
+        self.use_baseline = use_baseline
         
         self.available_suggestions = []
         self.gathered_suggestions = False
@@ -61,19 +67,22 @@ class Dialogue_management_system:
     def state_transition(self, user_utterance: str)-> str:
         """
         This function takes in a user utterance and returns the next
-        state of the dialogue system. It uses the classifier function to
-        classify the user utterance into a dialogue act.
+        state of the dialogue system. It uses the classifier function or 
+        the rule-based baseline to classify the user utterance into a dialogue act.
 
         @param user_utterance (str): The input from the user.
 
         @return (str): The name of the next state.
         """
-        # Classify using trained model
-        dialogue_act = self.classifier(
-            [user_utterance],
-            "models/sequential_orig.keras",
-            "models/sequential_orig.pickle"
-        )[0]
+        # Classify using trained model or rule-based baseline
+        if self.use_baseline:
+            dialogue_act = rulebased(user_utterance)
+        else:
+            dialogue_act = self.classifier(
+                [user_utterance],
+                "models/sequential_orig.keras",
+                "models/sequential_orig.pickle"
+            )[0]
 
         # Find patterns for pricerange, area, food.
         if dialogue_act is "inform":
