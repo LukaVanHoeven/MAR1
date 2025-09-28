@@ -1,6 +1,7 @@
 import pandas as pd
 import Levenshtein
 from pathlib import Path
+from typing import TypedDict
 
 
 class PreferenceHandler:
@@ -13,6 +14,11 @@ class PreferenceHandler:
             "food": ["food", "cuisine"],
             "pricerange": ["price", "pricerange", "pricing"]
         }
+        """
+        The constructor for the PreferenceHandles class.
+        Initializes valid food types, area types, price range types, category words,
+        possible extra requirements, valid extra preferences, valid words, threshold distance,  and loads restaurant data from a CSV file.
+        """
         
         self.possible_extra_requirements = {
             "romantic": {
@@ -52,6 +58,14 @@ class PreferenceHandler:
     def find_matching_restaurants(self, area, food, pricerange) -> list:
         """
         This function finds restaurants that match the given preferences for area, food, and price range.
+        All params should be words that are in the valid lists defined in the constructor.
+        If a parameter is "any" it means that the user has no preference for that parameter.
+        @param area (str): The preferred area of the restaurant.
+        @param food (str): The preferred type of food.
+        @param pricerange (str): The preferred price range of the restaurant.
+        
+        Returns:
+            list: A list of dictionaries representing the matching restaurants.
         """
         matching_restaurants = self.data
         if area:
@@ -63,15 +77,31 @@ class PreferenceHandler:
         if pricerange:
             if pricerange != "any":
                 matching_restaurants = matching_restaurants[matching_restaurants['pricerange'] == pricerange]
-        return matching_restaurants['restaurantname'].tolist()
+        #return it as a list of dictionaries
+        matching_restaurants = matching_restaurants.to_dict(orient='records')
+        return matching_restaurants
 
-    def return_matching(self, restaurant, requirements):
-        #This function returns a dictionary which contains true if a requirement is met, false otherwise
+    def return_matching(self, restaurant, requirements) -> dict:
+        """
+        This function checks if a restaurant meets the given requirements.
+        @param restaurant (dict): A dictionary representing a restaurant with its attributes.
+        @param requirements (dict): A dictionary of requirements to check against the restaurant's attributes.
+        
+        Returns:
+            dict: A dictionary indicating whether each requirement is met (True) or not (False).
+        """        
         return {req[0]: restaurant[req[0]] == req[1] for req in requirements.items()}
 
     def characteristic_of_restaurant(self, restaurants: list, user_requirement):
         """
         This function takes a list of restaurants and a user requirement (e.g., "romantic", "family-friendly") and returns the restaurants that match the requirement and reason.
+        
+        @param restaurants (list): A list of restaurant dictionaries.
+        @param user_requirement (str): The user requirement to match (e.g., "romantic", "family-friendly").
+        
+        Returns:
+            restaurant (dict): The restaurant that best matches the user requirement.
+            reason (str): A string explaining why the restaurant was chosen based on the user's requirement.
         """
         # We will make a new list of restaurants with their respective points for each fulfilled requirement
         restaurants = [(r, self.return_matching(r, self.possible_extra_requirements[user_requirement])) for r in restaurants]
@@ -90,9 +120,9 @@ class PreferenceHandler:
         reason = ""
         
         if suffices_all_requirements:
-            reason = f"I found a restaurant which is very {user_requirement},  "
+            reason = f"I found a restaurant which is very {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
         else:
-            reason = f"I found a restaurant which is somewhat {user_requirement}, "
+            reason = f"I found a restaurant which is somewhat {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
 
         if "food_quality" in picked_match_parameters:
             reason += f"the food is {'good' if self.possible_extra_requirements[user_requirement]['food_quality']== 1 else 'average'} and "
@@ -112,11 +142,10 @@ class PreferenceHandler:
             
         return picked_restaurant, reason
 
-    def parse_preference_statement(self, input):
+    def parse_preference_statement(self, input) -> dict[str, str]:
         """This function parses the user input in the form of a string, and returns a dictionary with the user's preferences for food, area, and price range.
 
-        Args:
-            input (str): The user input string.
+        @param input (str): The user input string.
 
         Returns:
             dict: A dictionary with the user's preferences for food, area, and price range.
@@ -142,7 +171,10 @@ class PreferenceHandler:
                 word_to_use = self.valid_words[smallest_index]
 
             if word_to_use == "any":
-                word_after_any = input.split(" ")[index + 1]
+                word_after_any = input.split(" ")
+                word_after_any = word_after_any[index + 1] if index + 1 < len(word_after_any) else ""
+                if word_after_any == "":
+                    continue
                 for category, words in self.category_words.items():
                     if word_after_any in words:
                         result[category] = "any"
@@ -158,28 +190,3 @@ class PreferenceHandler:
                 result["additional"] = word_to_use
 
         return result
-
-# #Example usage
-# pref = PreferenceHandler()
-# #Test the characteristics function
-# restaurants = [
-#     {
-#         "restaurantname": "The Gourmet Kitchen",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     },
-#     {
-#         "restaurantname": "Family Diner",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     },
-#     {
-#         "restaurantname": "Tourist's Delight",
-#         "food_quality": 0,
-#         "crowdedness": 1,
-#         "length_of_stay": 1
-#     }
-# ]
-# print(pref.characteristic_of_restaurant(restaurants, "trashy"))

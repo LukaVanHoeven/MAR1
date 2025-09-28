@@ -57,7 +57,6 @@ class Dialogue_management_system:
         self.preference_statement = PreferenceHandler()
         self.preference_extractor = self.preference_statement.parse_preference_statement
 
-        self.available_suggestions = []
 
     def state_transition(self, user_utterance: str)-> str:
         """
@@ -77,7 +76,8 @@ class Dialogue_management_system:
         )[0]
 
         # Find patterns for pricerange, area, food.
-        self.extract_preferences(user_utterance)
+        if dialogue_act is "inform":
+            self.extract_preferences(user_utterance)
         
         if self.pricerange and self.area and self.food and not self.gathered_suggestions:
             self.gathered_suggestions = True
@@ -100,7 +100,7 @@ class Dialogue_management_system:
         """
         statement_parser = self.preference_extractor(user_utterance)
         for key, value in statement_parser.items():
-            if value is not None:  # only update if we got something useful
+            if value is not None and self.current_state is not "give_suggestion":  # only update if we got something useful
                 if key == "pricerange":
                     if self.pricerange is None or self.allow_preference_change:
                         self.pricerange = value
@@ -158,6 +158,7 @@ class Dialogue_management_system:
                 self.pricerange = None
                 self.area = None
                 self.food = None 
+                self.additional = None
                 self.available_suggestions = []
                 self.gathered_suggestions = False
                 
@@ -186,10 +187,18 @@ class Dialogue_management_system:
                 self._print("What price range are you looking for?")
             case "ask_food", False:
                 self._print("What kind of food would you like?")
+            case "extra_requirements", False:
+                self._print("Do you have any additional requirements? For example do you want the restaurant to be romantic, family-friendly, or quick?")
             case "give_suggestion", False:
-                if len(self.available_suggestions) > 0:
+                if self.additional is not None:
+                    picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
+                        self.available_suggestions, self.additional
+                    )
+                    if picked_restaurant is not None:
+                        self._print(reason)
+                elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
-                    self._print(f"I have found a restaurant that matches your preferences. It is {suggestion} food in the {self.area} area with a {self.pricerange} price range.")
+                    self._print(f"I have found a restaurant that matches your preferences. It is {suggestion['restaurantname']} food in the {self.area} area with a {self.pricerange} price range.")
                 else:
                     self._print("I am sorry, I do not have any more suggestions that match your criteria.")
             case "pick_suggested_or_restart", False:
@@ -204,10 +213,17 @@ class Dialogue_management_system:
                 self._print("I am sorry, I did not understand that. What price range are you looking for (cheap, moderate or expensive)?")
             case "ask_food", True:
                 self._print("I am sorry, we do not have that kind of food. What kind of food would you like?")
+            case "extra_requirements", True:
+                self._print("I am sorry, I did not understand that. Do you have any additional requirements? For example do you want the restaurant to be romantic, family-friendly, or quick?")
             case "give_suggestion", True:
-                if len(self.available_suggestions) > 0:
+                picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
+                        self.available_suggestions, self.additional
+                    )
+                if picked_restaurant is not None:
+                    self._print(reason)
+                elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
-                    self._print(f"I have found another restaurant that matches your preferences called {suggestion}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.")
+                    self._print(f"I have found another restaurant that matches your preferences called {suggestion['restaurantname']}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.")
                 else:
                     self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.")
             case "pick_suggested_or_restart", True:
