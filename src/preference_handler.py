@@ -6,6 +6,11 @@ from typing import TypedDict
 
 class PreferenceHandler:
     def __init__(self):
+        """
+        The constructor for the PreferenceHandles class.
+        Initializes valid food types, area types, price range types, category words,
+        possible extra requirements, valid extra preferences, valid words, threshold distance,  and loads restaurant data from a CSV file.
+        """
         self.valid_food_types = ('british', 'modern european', 'italian', 'romanian', 'seafood', 'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese', 'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai', 'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan', 'international', 'traditional', 'mediterranean', 'polynesian', 'african', 'turkish', 'bistro', 'north american', 'australasian', 'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan')
         self.valid_area_types = ("centre", "south", "north", "east", "west")
         self.valid_price_range_types = ("cheap", "moderate", "expensive")
@@ -14,11 +19,12 @@ class PreferenceHandler:
             "food": ["food", "cuisine"],
             "pricerange": ["price", "pricerange", "pricing"]
         }
-        """
-        The constructor for the PreferenceHandles class.
-        Initializes valid food types, area types, price range types, category words,
-        possible extra requirements, valid extra preferences, valid words, threshold distance,  and loads restaurant data from a CSV file.
-        """
+        
+        self.info_types = {
+            "phone": ["phone", "number", "phonenumber", "phone number"],
+            "address": ["address", "location", "place"],
+            "postcode": ["postcode", "zip", "zip code", "postal code"]
+        }
         
         self.possible_extra_requirements = {
             "romantic": {
@@ -189,4 +195,22 @@ class PreferenceHandler:
             if word_to_use in self.valid_extra_preferences:
                 result["additional"] = word_to_use
 
+        return result
+
+    def parse_info_request(self, input) -> list:
+        """This function parses the user input in the form of a string, and returns a list with the types of information requested by the user.
+
+        @param input (str): The user input string.
+
+        Returns:
+            list: A list with the types of information requested by the user.
+        """
+        result = []
+        input = input.lower()
+        
+        for key, value in self.info_types.items():
+            for word in value:
+                if word in input:
+                    result.append(key)
+                    break
         return result

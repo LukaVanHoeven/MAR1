@@ -77,8 +77,13 @@ def recommendation()-> None:
         Transition(original_state="extra_requirements", dialogue_act=["inform", "negate"], next_state="give_suggestion"),
         Transition(original_state="extra_requirements", dialogue_act=["null", "repeat", "request"], next_state="extra_requirements"),
 
-        # If the user agrees on the suggestion it should move to end conversation
-        Transition(original_state="give_suggestion", dialogue_act=["ack", "affirm", "thankyou"], next_state="end_conversation"),
+        # If the user agrees on the suggestion it should move to asking if the user wants more info
+        Transition(original_state="give_suggestion", dialogue_act=["ack", "affirm", "thankyou"], next_state="ask_additional_info"),
+        
+        # If the user wants more info about the suggestion we should give it
+        Transition(original_state="ask_additional_info", dialogue_act=["inform"], next_state="ask_additional_info"),
+        Transition(original_state="ask_additional_info", dialogue_act=["null", "repeat", "request"], next_state="ask_additional_info"),
+        Transition(original_state="ask_additional_info", dialogue_act=["deny", "negate", "thankyou", "bye"], next_state="end_conversation"),
 
         # If the user does not like the suggestions and there are other suggestions the user should get a new suggestion
         Transition(original_state="give_suggestion", dialogue_act=["deny", "negate", "reqalts"], condition=lambda d:len(d.available_suggestions) > 0 and d.additional is None, next_state="give_suggestion"),
@@ -88,7 +93,7 @@ def recommendation()-> None:
 
         # If the user takes the last offered suggestion it ends the conversation
         Transition(original_state="pick_suggestion_or_restart", dialogue_act=["repeat", "null"], next_state="pick_suggestion_or_restart"),
-        Transition(original_state="pick_suggested_or_restart", dialogue_act=["ack", "affirm", "thankyou", "bye"], next_state="end_conversation"),
+        Transition(original_state="pick_suggested_or_restart", dialogue_act=["ack", "affirm", "thankyou", "bye"], next_state="ask_additional_info"),
         
         # If the user does not like the last offered suggestion it goes back to the welcome state
         Transition(original_state="pick_suggested_or_restart", dialogue_act=["deny", "negate", "restart"], next_state="welcome"),

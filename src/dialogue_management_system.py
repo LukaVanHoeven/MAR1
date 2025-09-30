@@ -12,9 +12,9 @@ class Dialogue_management_system:
     A class to manage the dialogue system for restaurant recommendations.
     """
     def __init__(
-            self, 
-            classifier_func: Callable, 
-            transitions: list[Transition], 
+            self,
+            classifier_func: Callable,
+            transitions: list[Transition],
             start_state: str,
             allow_preference_change: bool=False,
             all_caps: bool=False,
@@ -23,9 +23,9 @@ class Dialogue_management_system:
         )-> None:
         """
         The constructor for Dialogue_management_system class.
-        @param classifier_func (Callable): A function that takes in a 
+        @param classifier_func (Callable): A function that takes in a
             user utterance and returns a dialogue act.
-        @param transitions (list[Transition]): A list of Transition 
+        @param transitions (list[Transition]): A list of Transition
             objects that define the possible transitions in the dialogue
             system.
         @param start_state (str): The state the system starts in.
@@ -39,8 +39,8 @@ class Dialogue_management_system:
         @param system_delay (bool): If True every time the system gives
             an output it will wait 1 second before printing. If False
             the output will be printed ASAP.
-        @param use_baseline (bool): If True the system will use the 
-            rule-based baseline. If False it will use the machine 
+        @param use_baseline (bool): If True the system will use the
+            rule-based baseline. If False it will use the machine
             learning classifier.
         """
         self.classifier = classifier_func
@@ -51,15 +51,17 @@ class Dialogue_management_system:
         self.all_caps = all_caps
         self.system_delay = system_delay
         self.use_baseline = use_baseline
-        
+
         self.available_suggestions = []
+        self.picked_suggestion = None
+        self.requested_additional_info = []
         self.gathered_suggestions = False
 
         self.pricerange = None
         self.area = None
-        self.food = None 
+        self.food = None
         self.additional = None
-        
+
         self.preference_statement = PreferenceHandler()
         self.preference_extractor = self.preference_statement.parse_preference_statement
 
@@ -67,7 +69,7 @@ class Dialogue_management_system:
     def state_transition(self, user_utterance: str)-> str:
         """
         This function takes in a user utterance and returns the next
-        state of the dialogue system. It uses the classifier function or 
+        state of the dialogue system. It uses the classifier function or
         the rule-based baseline to classify the user utterance into a dialogue act.
 
         @param user_utterance (str): The input from the user.
@@ -85,19 +87,22 @@ class Dialogue_management_system:
             )[0]
 
         # Find patterns for pricerange, area, food.
-        if dialogue_act == "inform":
+        if dialogue_act == "inform" and self.current_state != "ask_additional_info":
             self.extract_preferences(user_utterance)
-        
+
+        if self.current_state == "ask_additional_info":
+            self.requested_additional_info = self.preference_statement.parse_info_request(user_utterance)
+
         if self.pricerange and self.area and self.food and not self.gathered_suggestions:
             self.gathered_suggestions = True
             self.available_suggestions = self.preference_statement.find_matching_restaurants(self.area, self.food, self.pricerange)
-            
+
         for transition in self.transitions:
             if transition.original_state == self.current_state and dialogue_act in transition.dialogue_act:
                 if transition.condition(self):
                     self.current_state = transition.next_state
                     return transition.next_state
-                
+
         return self.current_state
 
     def extract_preferences(self, user_utterance: str)-> None:
@@ -158,27 +163,27 @@ class Dialogue_management_system:
             "may I help you?"
         )
         while True:
-            
+
             user = input(">").lower()
             if user == "exit" or user == "end_conversation":
                 break
-            
+
             if self.current_state == "welcome":
                 self.pricerange = None
                 self.area = None
-                self.food = None 
+                self.food = None
                 self.additional = None
                 self.available_suggestions = []
                 self.gathered_suggestions = False
-                
+
             previous_state = self.current_state
-            
+
             next_state = self.state_transition(user)
-            
+
             self.print_next_conversation_step(previous_state == next_state)
             if next_state == "end_conversation":
                 break
-            
+
     def print_next_conversation_step(self, repeat: bool=False)-> None:
         """
         This function prints the next step in the conversation based on
@@ -198,15 +203,27 @@ class Dialogue_management_system:
                 self._print("What kind of food would you like?")
             case "extra_requirements", False:
                 self._print("Do you have any additional requirements? For example do you want the restaurant to be romantic, family-friendly, or quick?")
+            case "ask_additional_info", True | False:
+                if len(self.requested_additional_info) > 0:
+                    if "phone" in self.requested_additional_info:
+                        self._print(f"The phone number of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['phone']}.")
+                    if "address" in self.requested_additional_info:
+                        self._print(f"The address of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['addr']}.")
+                    if "postcode" in self.requested_additional_info:
+                        self._print(f"The postcode of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['postcode']}.")
+                else:
+                    self._print("Would you like more information about the suggested restaurant?")
             case "give_suggestion", False:
                 if self.additional is not None:
                     picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
                         self.available_suggestions, self.additional
                     )
                     if picked_restaurant is not None:
+                        self.picked_suggestion = picked_restaurant
                         self._print(reason)
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
+                    self.picked_suggestion = suggestion
                     self._print(f"I have found a restaurant that matches your preferences. It is {suggestion['restaurantname']} food in the {self.area} area with a {self.pricerange} price range.")
                 else:
                     self._print("I am sorry, I do not have any more suggestions that match your criteria.")
@@ -229,9 +246,11 @@ class Dialogue_management_system:
                         self.available_suggestions, self.additional
                     )
                 if picked_restaurant is not None:
+                    self.picked_suggestion = picked_restaurant
                     self._print(reason)
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
+                    self.picked_suggestion = suggestion
                     self._print(f"I have found another restaurant that matches your preferences called {suggestion['restaurantname']}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.")
                 else:
                     self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.")
@@ -239,12 +258,12 @@ class Dialogue_management_system:
                 self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Will you accept the given suggestion or start over?")
             case "end_conversation", True:
                 self._print("I am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!")
-        
+
     def _print(self, msg: str)-> None:
         """
         This function handles the printing of the system outputs. It
         handles whether the message needs to be in all caps or not and
-        if you need to wait one second to see the system output. 
+        if you need to wait one second to see the system output.
 
         The system output is also printed in yellow.
 
