@@ -8,10 +8,49 @@ class PreferenceHandler:
     def __init__(self):
         """
         The constructor for the PreferenceHandles class.
-        Initializes valid food types, area types, price range types, category words,
-        possible extra requirements, valid extra preferences, valid words, threshold distance,  and loads restaurant data from a CSV file.
+        Initializes valid food types, area types, price range types, 
+        category words, possible extra requirements, valid extra 
+        preferences, valid words, threshold distance,  and loads 
+        restaurant data from a CSV file.
         """
-        self.valid_food_types = ('british', 'modern european', 'italian', 'romanian', 'seafood', 'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese', 'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai', 'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan', 'international', 'traditional', 'mediterranean', 'polynesian', 'african', 'turkish', 'bistro', 'north american', 'australasian', 'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan')
+        self.valid_food_types = (
+            'british',
+            'modern european',
+            'italian',
+            'romanian',
+            'seafood',
+            'chinese',
+            'steakhouse',
+            'asian oriental',
+            'french',
+            'portuguese',
+            'indian',
+            'spanish',
+            'european',
+            'vietnamese',
+            'korean',
+            'thai',
+            'moroccan',
+            'swiss',
+            'fusion',
+            'gastropub',
+            'tuscan',
+            'international',
+            'traditional',
+            'mediterranean',
+            'polynesian',
+            'african',
+            'turkish',
+            'bistro',
+            'north american',
+            'australasian',
+            'persian',
+            'jamaican',
+            'lebanese',
+            'cuban',
+            'japanese',
+            'catalan'
+        )
         self.valid_area_types = ("centre", "south", "north", "east", "west")
         self.valid_price_range_types = ("cheap", "moderate", "expensive")
         self.category_words = {
@@ -56,58 +95,91 @@ class PreferenceHandler:
         }
         self.valid_extra_preferences = list(self.possible_extra_requirements.keys())
 
-        self.valid_words = *self.valid_food_types, *self.valid_area_types, *self.valid_price_range_types, *self.valid_extra_preferences, "any"
+        self.valid_words = \
+            *self.valid_food_types, \
+            *self.valid_area_types, \
+            *self.valid_price_range_types, \
+            *self.valid_extra_preferences, \
+            "any"
         self.threshold_distance = 3
         data_folder = Path(__file__).resolve().parent.parent / "data"
         self.data = pd.read_csv(data_folder / "restaurant_info.csv")
 
-    def find_matching_restaurants(self, area, food, pricerange) -> list:
+    def find_matching_restaurants(
+        self,
+        area: str,
+        food: str,
+        pricerange: str
+    ) -> list:
         """
-        This function finds restaurants that match the given preferences for area, food, and price range.
-        All params should be words that are in the valid lists defined in the constructor.
-        If a parameter is "any" it means that the user has no preference for that parameter.
+        This function finds restaurants that match the given preferences
+        for area, food, and price range. All params should be words that
+        are in the valid lists defined in the constructor. If a parameter 
+        is "any" it means that the user has no preference for that 
+        parameter.
+
         @param area (str): The preferred area of the restaurant.
         @param food (str): The preferred type of food.
-        @param pricerange (str): The preferred price range of the restaurant.
+        @param pricerange (str): The preferred price range of the 
+            restaurant.
         
-        Returns:
-            list: A list of dictionaries representing the matching restaurants.
+        @return (list): A list of dictionaries representing the matching 
+            restaurants.
         """
         matching_restaurants = self.data
         if area:
             if area != "any":
-                matching_restaurants = matching_restaurants[matching_restaurants['area'] == area]
+                matching_restaurants = matching_restaurants[
+                    matching_restaurants['area'] == area
+                ]
         if food:
             if food != "any":
-                matching_restaurants = matching_restaurants[matching_restaurants['food'] == food]
+                matching_restaurants = matching_restaurants[
+                    matching_restaurants['food'] == food
+                ]
         if pricerange:
             if pricerange != "any":
-                matching_restaurants = matching_restaurants[matching_restaurants['pricerange'] == pricerange]
+                matching_restaurants = matching_restaurants[
+                    matching_restaurants['pricerange'] == pricerange
+                ]
         #return it as a list of dictionaries
         matching_restaurants = matching_restaurants.to_dict(orient='records')
         return matching_restaurants
 
-    def return_matching(self, restaurant, requirements) -> dict:
+    def return_matching(self, restaurant: dict, requirements: dict) -> dict:
         """
         This function checks if a restaurant meets the given requirements.
-        @param restaurant (dict): A dictionary representing a restaurant with its attributes.
-        @param requirements (dict): A dictionary of requirements to check against the restaurant's attributes.
-        
-        Returns:
-            dict: A dictionary indicating whether each requirement is met (True) or not (False).
-        """        
-        return {req[0]: restaurant[req[0]] == req[1] for req in requirements.items()}
 
-    def characteristic_of_restaurant(self, restaurants: list, user_requirement):
+        @param restaurant (dict): A dictionary representing a restaurant
+            with its attributes.
+        @param requirements (dict): A dictionary of requirements to
+            check against the restaurant's attributes.
+        
+        @return (dict): A dictionary indicating whether each requirement
+            is met (True) or not (False).
+        """        
+        return {
+            req[0]: restaurant[req[0]] == req[1] for req in requirements.items()
+        }
+
+    def characteristic_of_restaurant(
+        self,
+        restaurants: list,
+        user_requirement: str
+    )-> tuple[dict, str]:
         """
-        This function takes a list of restaurants and a user requirement (e.g., "romantic", "family-friendly") and returns the restaurants that match the requirement and reason.
+        This function takes a list of restaurants and a user requirement
+        (e.g., "romantic", "family-friendly") and returns the restaurants
+        that match the requirement and reason.
         
         @param restaurants (list): A list of restaurant dictionaries.
-        @param user_requirement (str): The user requirement to match (e.g., "romantic", "family-friendly").
+        @param user_requirement (str): The user requirement to match
+            (e.g., "romantic", "family-friendly").
         
-        Returns:
-            restaurant (dict): The restaurant that best matches the user requirement.
-            reason (str): A string explaining why the restaurant was chosen based on the user's requirement.
+        @return (tuple[dict, str]): Tuple containing:
+            - The restaurant that best matches the user requirement.
+            - A string explaining why the restaurant was chosen based on
+                the user's requirement.
         """
         # We will make a new list of restaurants with their respective points for each fulfilled requirement
         restaurants = [(r, self.return_matching(r, self.possible_extra_requirements[user_requirement])) for r in restaurants]
@@ -149,12 +221,16 @@ class PreferenceHandler:
         return picked_restaurant, reason
 
     def parse_preference_statement(self, input) -> dict[str, str]:
-        """This function parses the user input in the form of a string, and returns a dictionary with the user's preferences for food, area, and price range.
+        """
+        This function parses the user input in the form of a string, 
+        and returns a dictionary with the user's preferences for food, 
+        area, and price range.
 
         @param input (str): The user input string.
 
         Returns:
-            dict: A dictionary with the user's preferences for food, area, and price range.
+            dict: A dictionary with the user's preferences for food, 
+                area, and price range.
         """
         result = {
             "food": None,
@@ -165,20 +241,23 @@ class PreferenceHandler:
         input = input.lower()
 
         for index, word in enumerate(input.split(" ")):
-            #Levenshtein distance to the closest valid word for every valid word
+            # Levenshtein distance to the closest valid word for every valid word
             word_to_use = word.lower()
 
             distances = [Levenshtein.distance(word, w) for w in self.valid_words]
             min_distance = min(distances)
 
-            #If the distance is smaller than some threshold, we consider it a valid word and use the corrected version
+            # If the distance is smaller than some threshold, we consider it a 
+            # valid word and use the corrected version
             if min_distance < self.threshold_distance:
                 smallest_index = distances.index(min_distance)
                 word_to_use = self.valid_words[smallest_index]
 
             if word_to_use == "any":
                 word_after_any = input.split(" ")
-                word_after_any = word_after_any[index + 1] if index + 1 < len(word_after_any) else ""
+                word_after_any = word_after_any[
+                    index + 1
+                ] if index + 1 < len(word_after_any) else ""
                 if word_after_any == "":
                     continue
                 for category, words in self.category_words.items():
@@ -198,7 +277,10 @@ class PreferenceHandler:
         return result
 
     def parse_info_request(self, input) -> list:
-        """This function parses the user input in the form of a string, and returns a list with the types of information requested by the user.
+        """
+        This function parses the user input in the form of a string, 
+        and returns a list with the types of information requested by 
+        the user.
 
         @param input (str): The user input string.
 

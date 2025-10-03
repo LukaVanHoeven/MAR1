@@ -63,14 +63,16 @@ class Dialogue_management_system:
         self.additional = None
 
         self.preference_statement = PreferenceHandler()
-        self.preference_extractor = self.preference_statement.parse_preference_statement
+        self.preference_extractor = \
+            self.preference_statement.parse_preference_statement
 
 
     def state_transition(self, user_utterance: str)-> str:
         """
         This function takes in a user utterance and returns the next
         state of the dialogue system. It uses the classifier function or
-        the rule-based baseline to classify the user utterance into a dialogue act.
+        the rule-based baseline to classify the user utterance into a 
+        dialogue act.
 
         @param user_utterance (str): The input from the user.
 
@@ -87,18 +89,27 @@ class Dialogue_management_system:
             )[0]
 
         # Find patterns for pricerange, area, food.
-        if dialogue_act == "inform" and self.current_state != "ask_additional_info":
+        if (dialogue_act == "inform" or dialogue_act == "null") and \
+            self.current_state != "ask_additional_info":
             self.extract_preferences(user_utterance)
 
         if self.current_state == "ask_additional_info":
-            self.requested_additional_info = self.preference_statement.parse_info_request(user_utterance)
+            self.requested_additional_info = \
+                self.preference_statement.parse_info_request(user_utterance)
 
-        if self.pricerange and self.area and self.food and not self.gathered_suggestions:
+        if self.pricerange and self.area and self.food and \
+                not self.gathered_suggestions:
             self.gathered_suggestions = True
-            self.available_suggestions = self.preference_statement.find_matching_restaurants(self.area, self.food, self.pricerange)
+            self.available_suggestions = \
+                self.preference_statement.find_matching_restaurants(
+                    self.area,
+                    self.food,
+                    self.pricerange
+                )
 
         for transition in self.transitions:
-            if transition.original_state == self.current_state and dialogue_act in transition.dialogue_act:
+            if transition.original_state == self.current_state and \
+                    dialogue_act in transition.dialogue_act:
                 if transition.condition(self):
                     self.current_state = transition.next_state
                     return transition.next_state

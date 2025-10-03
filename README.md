@@ -11,11 +11,6 @@ Names: Bas de Blok, Mykola Chuprynskyy, Melissa Rueca, Luka van Hoeven
        - `1`: Train and evaluate the text classification models of assignment 1a.
        - `2`: Use the dialogue management system for restaurant recommendation from assignment 1b and 1c.
 
-## Some limitations:
-
--When you put in just 1 word, it might not recognize it as 'inform'
-This means that the system will not check if there are any preferences stated in your utterance. For this sake we recommend uttering more than 1 word to the system. Especially when making deliberate spelling mistakes.
-
 ### Configurability
 
 The dialogue management system has a couple of configurable options that can be used through adding the following arguments to the command line behind `python main.py`:

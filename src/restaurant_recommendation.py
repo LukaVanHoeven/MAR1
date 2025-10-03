@@ -48,25 +48,25 @@ def recommendation()-> None:
 
     transitions = [
         Transition(original_state="welcome", dialogue_act=["hello"], next_state="ask_area"),
-        Transition(original_state="welcome", dialogue_act=["inform"], condition=lambda d: d.area is not None and d.pricerange is not None and d.food is not None, next_state="extra_requirements"),
-        Transition(original_state="welcome", dialogue_act=["inform"], condition=lambda d: d.area is not None and d.pricerange is not None and d.food is None, next_state="ask_food"),
-        Transition(original_state="welcome", dialogue_act=["inform"], condition=lambda d: d.area is not None and d.pricerange is None, next_state="ask_pricerange"),
-        Transition(original_state="welcome", dialogue_act=["inform"], condition=lambda d: d.area is None, next_state="ask_area"),
+        Transition(original_state="welcome", dialogue_act=["inform", "null"], condition=lambda d: d.area is not None and d.pricerange is not None and d.food is not None, next_state="extra_requirements"),
+        Transition(original_state="welcome", dialogue_act=["inform", "null"], condition=lambda d: d.area is not None and d.pricerange is not None and d.food is None, next_state="ask_food"),
+        Transition(original_state="welcome", dialogue_act=["inform", "null"], condition=lambda d: d.area is not None and d.pricerange is None, next_state="ask_pricerange"),
+        Transition(original_state="welcome", dialogue_act=["inform", "null"], condition=lambda d: d.area is None, next_state="ask_area"),
         
-        Transition(original_state="ask_area", dialogue_act=["inform"], condition=lambda d: d.area is None, next_state="ask_area"),
-        Transition(original_state="ask_area", dialogue_act=["inform"], condition=lambda d: d.pricerange is not None and d.food is not None and d.area is not None, next_state="extra_requirements"),
-        Transition(original_state="ask_area", dialogue_act=["inform"], condition=lambda d: d.pricerange is not None and d.food is None, next_state="ask_food"),
-        Transition(original_state="ask_area", dialogue_act=["inform"], condition=lambda d: d.pricerange is None, next_state="ask_pricerange"),
+        Transition(original_state="ask_area", dialogue_act=["inform", "null"], condition=lambda d: d.area is None, next_state="ask_area"),
+        Transition(original_state="ask_area", dialogue_act=["inform", "null"], condition=lambda d: d.pricerange is not None and d.food is not None and d.area is not None, next_state="extra_requirements"),
+        Transition(original_state="ask_area", dialogue_act=["inform", "null"], condition=lambda d: d.pricerange is not None and d.food is None, next_state="ask_food"),
+        Transition(original_state="ask_area", dialogue_act=["inform", "null"], condition=lambda d: d.pricerange is None, next_state="ask_pricerange"),
         
-        Transition(original_state="ask_pricerange", dialogue_act=["inform"], condition=lambda d:d.pricerange is None, next_state="ask_pricerange"),
-        Transition(original_state="ask_pricerange", dialogue_act=["inform"], condition=lambda d: d.food is not None and d.pricerange is not None and d.area is not None, next_state="extra_requirements"),
-        Transition(original_state="ask_pricerange", dialogue_act=["inform"], condition=lambda d: d.food is None, next_state="ask_food"),
-        Transition(original_state="ask_pricerange", dialogue_act=["inform"], condition=lambda d: d.area is None, next_state="ask_area"),
+        Transition(original_state="ask_pricerange", dialogue_act=["inform", "null"], condition=lambda d:d.pricerange is None, next_state="ask_pricerange"),
+        Transition(original_state="ask_pricerange", dialogue_act=["inform", "null"], condition=lambda d: d.food is not None and d.pricerange is not None and d.area is not None, next_state="extra_requirements"),
+        Transition(original_state="ask_pricerange", dialogue_act=["inform", "null"], condition=lambda d: d.food is None, next_state="ask_food"),
+        Transition(original_state="ask_pricerange", dialogue_act=["inform", "null"], condition=lambda d: d.area is None, next_state="ask_area"),
         
-        Transition(original_state="ask_food", dialogue_act=["inform"], condition=lambda d: d.food is None, next_state="ask_food"),
-        Transition(original_state="ask_food", dialogue_act=["inform"], condition=lambda d: d.food is not None and d.pricerange is not None and d.area is not None, next_state="extra_requirements"),
-        Transition(original_state="ask_food", dialogue_act=["inform"], condition=lambda d: d.pricerange is None, next_state="ask_pricerange"),
-        Transition(original_state="ask_food", dialogue_act=["inform"], condition=lambda d: d.area is None, next_state="ask_area"),
+        Transition(original_state="ask_food", dialogue_act=["inform", "null"], condition=lambda d: d.food is None, next_state="ask_food"),
+        Transition(original_state="ask_food", dialogue_act=["inform", "null"], condition=lambda d: d.food is not None and d.pricerange is not None and d.area is not None, next_state="extra_requirements"),
+        Transition(original_state="ask_food", dialogue_act=["inform", "null"], condition=lambda d: d.pricerange is None, next_state="ask_pricerange"),
+        Transition(original_state="ask_food", dialogue_act=["inform", "null"], condition=lambda d: d.area is None, next_state="ask_area"),
 
         # For the repeat, null, bye, reqmore, reqalts, request dialogue acts we stay in the same state
         Transition(original_state="welcome", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="welcome"),
@@ -74,14 +74,14 @@ def recommendation()-> None:
         Transition(original_state="ask_pricerange", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="ask_pricerange"),
         Transition(original_state="give_suggestion", dialogue_act=["repeat", "null", "bye", "reqmore", "reqalts", "request"], next_state="extra_requirements"),
 
-        Transition(original_state="extra_requirements", dialogue_act=["inform", "negate"], next_state="give_suggestion"),
+        Transition(original_state="extra_requirements", dialogue_act=["inform", "null", "negate"], next_state="give_suggestion"),
         Transition(original_state="extra_requirements", dialogue_act=["null", "repeat", "request"], next_state="extra_requirements"),
 
         # If the user agrees on the suggestion it should move to asking if the user wants more info
         Transition(original_state="give_suggestion", dialogue_act=["ack", "affirm", "thankyou"], next_state="ask_additional_info"),
         
         # If the user wants more info about the suggestion we should give it
-        Transition(original_state="ask_additional_info", dialogue_act=["inform"], next_state="ask_additional_info"),
+        Transition(original_state="ask_additional_info", dialogue_act=["inform", "null"], next_state="ask_additional_info"),
         Transition(original_state="ask_additional_info", dialogue_act=["null", "repeat", "request"], next_state="ask_additional_info"),
         Transition(original_state="ask_additional_info", dialogue_act=["deny", "negate", "thankyou", "bye"], next_state="end_conversation"),
 
@@ -102,7 +102,7 @@ def recommendation()-> None:
     #Train the sequential model so we have something to use (Mainly for being able to just run 1 file for handing in the assignment)
     if args.train:
         orig_train = pd.read_csv("train_orig.csv")
-        model_sequential_orig, tokenizer_sequential_orig = train_sequential("sequential_orig", orig_train)
+        train_sequential("sequential_orig", orig_train)
     
     dms = Dialogue_management_system(
         sequential,
