@@ -186,7 +186,7 @@ class PreferenceHandler:
 
         # If no restaurants match any requirement, return a message
         if all(sum(x[1].values()) == 0 for x in restaurants):
-            return "", "I am sorry, but I could not find any restaurants that match your requirement."
+            return "", "I am sorry, but I could not find any restaurants that match your requirement. Do you want to start over or exit?"
 
         # Pick the restaurant with the highest number of matched requirements
         picked_restaurant = max(restaurants, key=lambda x: sum(x[1].values()))
@@ -198,9 +198,9 @@ class PreferenceHandler:
         reason = ""
         
         if suffices_all_requirements:
-            reason = f"I found a restaurant which is very {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
+            reason = f"I found a restaurant which is very {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. Do you like it"
         else:
-            reason = f"I found a restaurant which is somewhat {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
+            reason = f"I found a restaurant which is somewhat {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. Do you like it?"
 
         if "food_quality" in picked_match_parameters:
             reason += f"the food is {'good' if self.possible_extra_requirements[user_requirement]['food_quality']== 1 else 'average'} and "
@@ -212,11 +212,11 @@ class PreferenceHandler:
             reason += f"the length of stay is {'appropriate' if self.possible_extra_requirements[user_requirement]['length_of_stay']== 1 else 'long'}. "
 
         if suffices_all_requirements:
-            reason += f"Overall, it is a great choice for a {user_requirement} restaurant. " 
+            reason += f"Overall, it is a great choice for a {user_requirement} restaurant. Do you like it?" 
         else:
             positive_aspects = [k.replace('_', ' ') for k, v in picked_match_parameters.items() if v]
             negative_aspects = [k.replace('_', ' ') for k, v in picked_match_parameters.items() if not v]
-            reason += f"It is {user_requirement} because of the {', '.join(positive_aspects)}, but it is not because of the {', '.join(negative_aspects)}. "
+            reason += f"It is {user_requirement} because of the {', '.join(positive_aspects)}, but it is not because of the {', '.join(negative_aspects)}. Do you like it?"
             
         return picked_restaurant, reason
 
@@ -246,12 +246,14 @@ class PreferenceHandler:
 
             distances = [Levenshtein.distance(word, w) for w in self.valid_words]
             min_distance = min(distances)
+            threshold = 1 if len(word) < 5 else 3
 
             # If the distance is smaller than some threshold, we consider it a 
             # valid word and use the corrected version
-            if min_distance < self.threshold_distance:
-                smallest_index = distances.index(min_distance)
-                word_to_use = self.valid_words[smallest_index]
+            if min_distance <= threshold:
+                word_to_use = self.valid_words[distances.index(min_distance)]
+            else:
+                word_to_use = word
 
             if word_to_use == "any":
                 word_after_any = input.split(" ")

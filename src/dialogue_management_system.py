@@ -169,8 +169,8 @@ class Dialogue_management_system:
         interact with the system.
         """
         self._print(
-            "Hello , welcome to the Cambridge restaurant system? You can " \
-            "ask for restaurants by area , price range or food type . How " \
+            "Hello, welcome to the Cambridge restaurant system! You can " \
+            "ask for restaurants by area, price range or food type. How " \
             "may I help you?"
         )
         while True:
@@ -178,6 +178,18 @@ class Dialogue_management_system:
             user = input(">").lower()
             if user == "exit" or user == "end_conversation":
                 break
+            elif user in ["restart", "start", "start over"]:
+                self.current_state = "welcome"
+                self.pricerange = None
+                self.area = None
+                self.food = None
+                self.additional = None
+                self.available_suggestions = []
+                self.gathered_suggestions = False
+                self.picked_suggestion = None
+                self.requested_additional_info = []
+                self.print_next_conversation_step(repeat=False)
+                continue
 
             if self.current_state == "welcome":
                 self.pricerange = None
@@ -205,7 +217,7 @@ class Dialogue_management_system:
         """
         match self.current_state, repeat:
             case "welcome", False:
-                self._print("Hello , welcome to the Cambridge restaurant system? You can ask for restaurants by area , price range or food type . How may I help you?")
+                self._print("Hello, welcome to the Cambridge restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?")
             case "ask_area", False:
                 self._print("In which area would you like to eat?")
             case "ask_pricerange", False:
@@ -217,29 +229,29 @@ class Dialogue_management_system:
             case "ask_additional_info", True | False:
                 if len(self.requested_additional_info) > 0:
                     if "phone" in self.requested_additional_info:
-                        self._print(f"The phone number of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['phone']}.")
+                        self._print(f"The phone number of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['phone']}. Do you need other information or exit?")
                     if "address" in self.requested_additional_info:
-                        self._print(f"The address of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['addr']}.")
+                        self._print(f"The address of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['addr']}. Do you need other information or exit?")
                     if "postcode" in self.requested_additional_info:
-                        self._print(f"The postcode of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['postcode']}.")
+                        self._print(f"The postcode of {self.picked_suggestion['restaurantname']} is {self.picked_suggestion['postcode']}. Do you need other information or exit?")
                 else:
-                    self._print("Would you like more information about the suggested restaurant?")
+                    self._print("Would you like more information about the suggested restaurant (phone, address or postcode)?")
             case "give_suggestion", False:
                 if self.additional is not None:
                     picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
                         self.available_suggestions, self.additional
                     )
                     if picked_restaurant is not None:
-                        self.picked_suggestion = picked_restaurant
+                        self.picked_suggestion = picked_restaurant[0]
                         self._print(reason)
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
                     self.picked_suggestion = suggestion
-                    self._print(f"I have found a restaurant that matches your preferences. It is {suggestion['restaurantname']} food in the {self.area} area with a {self.pricerange} price range.")
+                    self._print(f"I have found a restaurant that matches your preferences. It is {suggestion['restaurantname']} food in the {self.area} area with a {self.pricerange} price range. Do you like it?")
                 else:
-                    self._print("I am sorry, I do not have any more suggestions that match your criteria.")
+                    self._print("I am sorry, I do not have any more suggestions that match your criteria. Do you want to start over or exit?")
             case "pick_suggested_or_restart", False:
-                self._print("Unfortunately there are no other restaurants matching your criteria. You can either pick the suggested restaurant or start over. Would you like to pick the suggested restaurant?")
+                self._print("Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant or start over?")
             case "end_conversation", False:
                 self._print("Thank you for using the Cambridge restaurant system. Goodbye!")
             case "welcome", True:
@@ -262,11 +274,11 @@ class Dialogue_management_system:
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
                     self.picked_suggestion = suggestion
-                    self._print(f"I have found another restaurant that matches your preferences called {suggestion['restaurantname']}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range.")
+                    self._print(f"I have found another restaurant that matches your preferences called {suggestion['restaurantname']}. It is {self.food} food in the {self.area} area with a {self.pricerange} price range. Do you like it?")
                 else:
-                    self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria.")
+                    self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Do you want to start over or exit?")
             case "pick_suggested_or_restart", True:
-                self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Will you accept the given suggestion or start over?")
+                self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Would you like to pick the suggested restaurant?")
             case "end_conversation", True:
                 self._print("I am sorry, I did not understand that. Thank you for using the Cambridge restaurant system. Goodbye!")
 
