@@ -198,9 +198,9 @@ class PreferenceHandler:
         reason = ""
         
         if suffices_all_requirements:
-            reason = f"I found a restaurant which is very {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. Do you like it"
+            reason = f"I found a restaurant which is very {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
         else:
-            reason = f"I found a restaurant which is somewhat {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. Do you like it?"
+            reason = f"I found a restaurant which is somewhat {user_requirement}, it is called {picked_restaurant[0]['restaurantname']}. "
 
         if "food_quality" in picked_match_parameters:
             reason += f"the food is {'good' if self.possible_extra_requirements[user_requirement]['food_quality']== 1 else 'average'} and "

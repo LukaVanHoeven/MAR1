@@ -242,7 +242,7 @@ class Dialogue_management_system:
                         self.available_suggestions, self.additional
                     )
                     if picked_restaurant is not None:
-                        self.picked_suggestion = picked_restaurant[0]
+                        self.picked_suggestion = picked_restaurant
                         self._print(reason)
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
