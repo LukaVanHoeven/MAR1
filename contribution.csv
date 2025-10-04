@@ -14,6 +14,9 @@ Melissa Rueca, Fixing dialogue management system, 2, 04/10/2025
 Bas de Blok, Combining all models into 1 cli; majority baseline; evaluation, 10, 12/09/2025
 Bas de Blok, Working on diagram with group, 2, 16/09/2025
 Bas de Blok, implementing the dialog management system and transitions, 5, 17/09/2025
+Bas de Blok, making new diagram and dividing up the tasks, 2, 23/09/2025
+Bas de Blok, implementing configurability for all caps and system delay and allowing users to change their preference, 2, 26/09/2025
+Bas de Blok, refactoring the repository and adding docstrings to all functions, 8, 28/09/2025
 Bas de Blok, handle the null classification of inform statements, 0.5, 03/10/2025
 Mykola Chuprynskyy,Raw data cleaning; the logistic regression analysis, 5.5, 13/09/2025
 Mykola Chuprynskyy, Merging the random generated tables to the Dataset, 2.5, 16/09/2025
