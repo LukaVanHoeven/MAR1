@@ -238,12 +238,16 @@ class Dialogue_management_system:
                     self._print("Would you like more information about the suggested restaurant (phone, address or postcode)?")
             case "give_suggestion", False:
                 if self.additional is not None:
-                    picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
+                    if not self.available_suggestions:
+                        self._print("I am sorry, I did not understand that. Unfortunately there are no other restaurants matching your criteria. Do you want to start over or exit?")
+                    
+                    else:
+                        picked_restaurant, reason = self.preference_statement.characteristic_of_restaurant(
                         self.available_suggestions, self.additional
-                    )
-                    if picked_restaurant is not None:
-                        self.picked_suggestion = picked_restaurant
-                        self._print(reason)
+                        )
+                        if picked_restaurant is not None:
+                            self.picked_suggestion = picked_restaurant
+                            self._print(reason)
                 elif len(self.available_suggestions) > 0:
                     suggestion = self.available_suggestions.pop(0)
                     self.picked_suggestion = suggestion

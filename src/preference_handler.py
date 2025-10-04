@@ -181,6 +181,10 @@ class PreferenceHandler:
             - A string explaining why the restaurant was chosen based on
                 the user's requirement.
         """
+
+        if not restaurants or not user_requirement:
+            return None, "I am sorry, I could not find any restaurants what match your requirement. Do you want to start over?"
+
         # We will make a new list of restaurants with their respective points for each fulfilled requirement
         restaurants = [(r, self.return_matching(r, self.possible_extra_requirements[user_requirement])) for r in restaurants]
 
