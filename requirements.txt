@@ -1,6 +1,6 @@
-tensorflow
-matplotlib
-scikit-learn
-numpy
-pandas
-levenshtein
+tensorflow==2.20.0
+matplotlib==3.10.6
+scikit-learn==1.7.2
+numpy==2.3.3
+pandas==2.3.2
+levenshtein==0.27.1
