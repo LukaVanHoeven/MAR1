@@ -2,35 +2,50 @@
 
 Names: Bas de Blok, Mykola Chuprynskyy, Melissa Rueca, Luka van Hoeven
 
-## How to use:
+## Instalation:
 
-1. Install the requirements.txt
-2. Run the program
-   - Running `python main.py` in your terminal will launch the base application.
-     - This will show you an option menu where you can type in 2 different options before pressing enter:
-       - `1`: Train and evaluate the text classification models of assignment 1a.
-       - `2`: Use the dialogue management system for restaurant recommendation from assignment 1b and 1c.
+1. Python version used: 3.11.13
+2. Install the requirements.txt: `pip install -r requirements.txt`
+
+
+## How to run the code:
+
+Running `python main.py` in your terminal will launch the base application.
+- This will show you an option menu where you can type in 2 different options before pressing enter:
+   - `1`: Train and evaluate the text classification models of assignment 1a.
+   - `2`: Use the dialogue management system for restaurant recommendation from assignment 1b and 1c.
 
 ### Configurability
 
 The dialogue management system has a couple of configurable options that can be used through adding the following arguments to the command line behind `python main.py`:
 
-- `--train` -> Trains the Machine Learning model that's used by the system, this is necessary if you're running for the first time.
-- `--allow_preference_change` -> Allows the user to adjust their preferences.
-- `--all_caps` -> Output the response of the system in all caps.
-- `--system_delay` -> Adds a 1 second delay before each system response.
-- `--use_baseline` -> Use a baseline model instead of a Machine Learning model.
+- `--train` -**User:**  Trains the Machine Learning model that's used by the system, this is necessary if you're running for the first time.
+- `--allow_preference_change` -**User:**  Allows the user to adjust their preferences.
+- `--all_caps` -**User:**  Output the response of the system in all caps.
+- `--system_delay` -**User:**  Adds a 1 second delay before each system response.
+- `--use_baseline` -**User:**  Use a baseline model instead of a Machine Learning model.
 
 ## Example run of dialogue management system
 
-1. Run the system
-2. Say hello
-3. Put in an area or area, pricerange and type of food all at the same time
-   - Inputting a sentence with "british" "moderate" and "centre" will give you 2 possible suggestions, this lets you test the logic for the system handling a rejection of the first choice.
-4. Put in an additional requirement like "I would like the restaurant to be romantic"
-5. Potentially get a suggestion
-6. Reject the suggestion
-7. Potentially get a new suggestion
+Hello, welcome to the Cambridge restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?\
+**User:** I want thai food
+
+In which area would you like to eat?\
+**User:** In the west
+
+What price range are you looking for?\
+**User:** expensize
+
+Do you have any additional requirements? For example do you want the restaurant to be romantic, family-friendly, or quick?\
+**User:** romantic
+
+I found a restaurant which is somewhat romantic, it is called sala thong. the food is good and it is not crowded and the length of stay is appropriate. It is romantic because of the food quality, length of stay, but it is not because of the crowdedness. Do you like it?\
+**User:** yes
+
+Would you like more information about the suggested restaurant (phone, address or postcode)?\
+**User:** no
+
+Thank you for using the Cambridge restaurant system. Goodbye!
 
 ## File descriptions
 
