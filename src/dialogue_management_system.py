@@ -246,6 +246,8 @@ class Dialogue_management_system:
                         self.available_suggestions, self.additional
                         )
                         if picked_restaurant is not None:
+                            if isinstance(picked_restaurant, tuple):
+                                picked_restaurant = picked_restaurant[0]
                             self.picked_suggestion = picked_restaurant
                             self._print(reason)
                 elif len(self.available_suggestions) > 0:
@@ -273,6 +275,8 @@ class Dialogue_management_system:
                         self.available_suggestions, self.additional
                     )
                 if picked_restaurant is not None:
+                    if isinstance(picked_restaurant, tuple):
+                        picked_restaurant = picked_restaurant[0]
                     self.picked_suggestion = picked_restaurant
                     self._print(reason)
                 elif len(self.available_suggestions) > 0:
