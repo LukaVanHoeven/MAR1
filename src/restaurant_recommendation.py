@@ -102,7 +102,7 @@ def recommendation()-> None:
     #Train the sequential model so we have something to use (Mainly for being able to just run 1 file for handing in the assignment)
     if args.train:
         orig_train = pd.read_csv("train_orig.csv")
-        model_sequential_orig, tokenizer_sequential_orig = train_sequential("sequential_orig", orig_train)
+        model_sequential_orig, tokenizer_sequential_orig, history_sequential_orig = train_sequential("sequential_orig", orig_train)
     
     dms = Dialogue_management_system(
         sequential,

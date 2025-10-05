@@ -5,7 +5,8 @@ from .parse import parse
 from .rulebased import rulebased
 from .sequential import train_sequential, sequential
 from pathlib import Path
-
+import seaborn as sns
+import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -45,15 +46,21 @@ def assignment1a()-> None:
 
     # Train
     model_folder = Path(__file__).resolve().parent.parent / "models"
-    model_sequential_orig, tokenizer_sequential_orig = train_sequential(
+    model_sequential_orig, tokenizer_sequential_orig, history_sequential_orig = train_sequential(
         model_folder / "sequential_orig",
         orig_train
     )
-    model_sequential_dedup, tokenizer_sequential_dedup = train_sequential(
+    
+    f1_score_sequential_orig = history_sequential_orig.history['val_accuracy'][-1]
+    plot_loss(history_sequential_orig)
+    
+    model_sequential_dedup, tokenizer_sequential_dedup, history_sequential_dedup = train_sequential(
         model_folder / "sequential_dedup",
         dedup_train
     )
-
+    
+    f1_score_sequential_dedup = history_sequential_dedup.history['val_accuracy'][-1]
+    plot_loss(history_sequential_dedup)
     model_logreg_orig = train_logreg(
         data_folder / "train_orig.csv",
         data_folder / "test_orig.csv",
@@ -88,11 +95,12 @@ def assignment1a()-> None:
     acc_majority_orig = accuracy_baseline(majority_class, orig_test)
     acc_majority_dedup = accuracy_baseline(majority_class, dedup_test)
 
-    acc_sequential_orig = accuracy_ML(sequential, orig_test, model_sequential_orig, tokenizer_sequential_orig, True)
-    acc_sequential_dedup = accuracy_ML(sequential, dedup_test, model_sequential_dedup, tokenizer_sequential_dedup, True)
-
-    acc_logreg_orig = accuracy_ML(logreg, orig_test, model_logreg_orig, None, False)
-    acc_logreg_dedup = accuracy_ML(logreg, dedup_test, model_logreg_dedup, None, False)
+    acc_sequential_orig, cm_sequential_orig = accuracy_ML(sequential, orig_test, model_sequential_orig, tokenizer_sequential_orig, True)
+    acc_sequential_dedup, cm_sequential_dedup = accuracy_ML(sequential, dedup_test, model_sequential_dedup, tokenizer_sequential_dedup, True)
+    show_confusion_matrix(cm_sequential_orig)
+    show_confusion_matrix(cm_sequential_dedup)
+    acc_logreg_orig, cm_logreg_orig = accuracy_ML(logreg, orig_test, model_logreg_orig, None, False)
+    acc_logreg_dedup, cm_logreg_dedup = accuracy_ML(logreg, dedup_test, model_logreg_dedup, None, False)
 
     # System comparison, chosen for accuracy as it's an easy to use metric to globally represent model performance
     print("\n---------------------\nSystem comparison:\n")
@@ -100,12 +108,14 @@ def assignment1a()-> None:
     print(f"Rule-based baseline = {acc_rulebased_orig * 100}%")
     print(f"Majority baseline= {acc_majority_orig * 100}%")
     print(f"Sequential ML = {acc_sequential_orig * 100}%")
+    print(f"Sequential ML F1-score = {f1_score_sequential_orig * 100}%")
     print(f"Logreg ML = {acc_logreg_orig * 100}%")
 
     print("Model accuracies on models trained/tested on deduplicated data")
     print(f"Rule-based baseline = {acc_rulebased_dedup * 100}%")
     print(f"Majority baseline = {acc_majority_dedup * 100}%")
     print(f"Sequential ML = {acc_sequential_dedup * 100}%")
+    print(f"Sequential ML F1-score = {f1_score_sequential_dedup * 100}%")
     print(f"Logreg ML = {acc_logreg_dedup * 100}%")
     print("---------------------\n")
 
@@ -176,3 +186,55 @@ def assignment1a()-> None:
                 label = logreg([sentence], model_folder / "logreg_dedup.joblib")[0]
 
             print(f"The predicted label is: {label}\n\n")
+
+def show_confusion_matrix(cm):
+    """
+    Displays the confusion matrix in a readable format.
+
+    @param cm: The confusion matrix to display.
+    """
+    output_types = {
+    "ack": 0,
+    "affirm": 1,
+    "bye": 2,
+    "confirm": 3,
+    "deny": 4,
+    "hello": 5,
+    "inform": 6,
+    "negate": 7,
+    "null": 8,
+    "repeat": 9,
+    "reqalts": 10,
+    "reqmore": 11,
+    "request": 12,
+    "restart": 13,
+    "thankyou": 14
+}
+    labels = [k for k, v in sorted(output_types.items(), key=lambda x: x[1])]
+    plt.figure(figsize=(10,7))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
+    plt.xlabel('Predicted')
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel('True')
+    plt.show()
+    
+
+def plot_loss(history):
+    """
+    Plots the training and validation loss from a Keras model history object.
+    
+    Parameters:
+        history: The History object returned by model.fit(...)
+    """
+    plt.figure(figsize=(8,5))
+    plt.plot(history.history['loss'], label='Training Loss')
+    
+    if 'val_loss' in history.history:  # only plot if validation loss exists
+        plt.plot(history.history['val_loss'], label='Validation Loss')
+    
+    plt.title("Model Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
+    plt.show()

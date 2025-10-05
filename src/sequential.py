@@ -100,11 +100,11 @@ def train_sequential(model_name: str, df: pd.DataFrame)-> tuple[str,str]:
         loss="categorical_crossentropy"
     )
 
-    model.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test))
+    history = model.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test))
 
     model.save(sequential_name)
 
-    return sequential_name, tokenizer_name
+    return sequential_name, tokenizer_name, history
 
 
 def sequential(data: list[str], model: str, tokenizer: str)-> list[str]:

@@ -1,0 +1,343 @@
+---------------------
+System comparison:
+
+Model accuracies on models trained/tested on original data
+Rule-based baseline = 85.22999999999999%
+Majority baseline= 39.839999999999996%
+Sequential ML = 98.38%
+Sequential ML F1-score = 98.2011079788208%
+Logreg ML = 97.11999999999999%
+Model accuracies on models trained/tested on deduplicated data
+Rule-based baseline = 82.44%
+Majority baseline = 57.16%
+Sequential ML = 88.79%
+Sequential ML F1-score = 89.91228342056274%
+Logreg ML = 87.55%
+---------------------
+
+
+---------------------
+--Hardest dialogue act for Rule-based baseline:
+deny -- F1 = 0.017241379310344827
+null -- F1 = 0.08695652173913043
+ack -- F1 = 0.2857142857142857
+confirm -- F1 = 0.5714285714285714
+repeat -- F1 = 0.6666666666666666
+reqmore -- F1 = 0.6666666666666666
+inform -- F1 = 0.851516098780869
+bye -- F1 = 0.8611111111111112
+request -- F1 = 0.9078242229367631
+reqalts -- F1 = 0.9277566539923955
+hello -- F1 = 0.9333333333333333
+negate -- F1 = 0.9538461538461539
+affirm -- F1 = 0.9618768328445748
+thankyou -- F1 = 0.9888776541961577
+restart -- F1 = 1.0
+--Hardest dialogue act for Majority baseline:
+ack -- F1 = 0.0
+affirm -- F1 = 0.0
+bye -- F1 = 0.0
+confirm -- F1 = 0.0
+deny -- F1 = 0.0
+hello -- F1 = 0.0
+negate -- F1 = 0.0
+null -- F1 = 0.0
+repeat -- F1 = 0.0
+reqalts -- F1 = 0.0
+reqmore -- F1 = 0.0
+request -- F1 = 0.0
+restart -- F1 = 0.0
+thankyou -- F1 = 0.0
+inform -- F1 = 0.569826135726304
+--Hardest dialogue act for Sequential ML trained on original data:
+ack -- F1 = 0.0
+repeat -- F1 = 0.8
+bye -- F1 = 0.925
+confirm -- F1 = 0.9387755102040817
+null -- F1 = 0.9544554455445544
+reqalts -- F1 = 0.9566854990583804
+hello -- F1 = 0.9655172413793104
+inform -- F1 = 0.9854689564068693
+affirm -- F1 = 0.9855072463768116
+thankyou -- F1 = 0.9928352098259979
+request -- F1 = 0.997431946584489
+deny -- F1 = 1.0
+negate -- F1 = 1.0
+reqmore -- F1 = 1.0
+restart -- F1 = 1.0
+--Hardest dialogue act for Sequential ML trained on deduplicated data:
+ack -- F1 = 0.0
+deny -- F1 = 0.0
+repeat -- F1 = 0.0
+reqmore -- F1 = 0.0
+restart -- F1 = 0.0
+bye -- F1 = 0.13894736842105262
+thankyou -- F1 = 0.29845626072041165
+confirm -- F1 = 0.9090909090909091
+null -- F1 = 0.921161825726141
+reqalts -- F1 = 0.961038961038961
+affirm -- F1 = 0.9644970414201184
+hello -- F1 = 0.9655172413793104
+inform -- F1 = 0.9784313725490196
+request -- F1 = 0.9922640536358948
+negate -- F1 = 1.0
+--Hardest dialogue act for Logreg ML trained on original data:
+ack -- F1 = 0.3076923076923077
+confirm -- F1 = 0.78125
+deny -- F1 = 0.8
+repeat -- F1 = 0.8888888888888888
+bye -- F1 = 0.9024390243902439
+null -- F1 = 0.9164882226980728
+hello -- F1 = 0.9333333333333333
+reqalts -- F1 = 0.9380863039399625
+inform -- F1 = 0.9777049180327869
+affirm -- F1 = 0.9794721407624634
+request -- F1 = 0.9855670103092784
+thankyou -- F1 = 0.9917864476386037
+negate -- F1 = 0.9923664122137404
+reqmore -- F1 = 1.0
+restart -- F1 = 1.0
+--Hardest dialogue act for Logreg ML trained on deduplicated data:
+ack -- F1 = 0.2857142857142857
+deny -- F1 = 0.6153846153846154
+confirm -- F1 = 0.8
+null -- F1 = 0.875
+bye -- F1 = 0.8974358974358975
+repeat -- F1 = 0.9090909090909091
+reqalts -- F1 = 0.9239332096474954
+hello -- F1 = 0.9333333333333333
+affirm -- F1 = 0.9642857142857143
+inform -- F1 = 0.968532626697582
+request -- F1 = 0.9813084112149533
+thankyou -- F1 = 0.9908069458631257
+negate -- F1 = 0.9923664122137404
+reqmore -- F1 = 1.0
+restart -- F1 = 1.0
+
+---------------------
+--Hardest utterances for Rule-based baseline
+Utterance: i dont care
+Label: inform, Prediction: deny
+
+Utterance: what area of town are they located
+Label: request, Prediction: inform
+
+Utterance: what type of food
+Label: request, Prediction: inform
+
+--Hardest utterances for Majority baseline
+Utterance: okay and ah can i get their phone number please
+Label: request, Prediction: inform
+
+Utterance: how about italian
+Label: reqalts, Prediction: inform
+
+Utterance: what is the price range
+Label: request, Prediction: inform
+
+--Hardest utterances for Sequential ML trained on original data
+Utterance: okay let me try this again
+Label: repeat, Prediction: null
+
+Utterance: im looking for a restaurant in the north part of town serving french type of food
+Label: request, Prediction: inform
+
+Utterance: in the cheap price range
+Label: request, Prediction: inform
+
+--Hardest utterances for Sequential ML trained on deduplicated data
+Utterance: thank you good bye
+Label: thankyou, Prediction: bye
+
+Utterance: okay let me try this again
+Label: repeat, Prediction: ack
+
+Utterance: thank you good bye
+Label: thankyou, Prediction: bye
+
+--Hardest utterances for Logreg ML trained on original data
+Utterance: okay let me try this again
+Label: repeat, Prediction: null
+
+Utterance: tell me number
+Label: null, Prediction: request
+
+Utterance: what is the
+Label: null, Prediction: request
+
+--Hardest utterances for Logreg ML trained on deduplicated data
+Utterance: um british
+Label: inform, Prediction: null
+
+Utterance: what is the
+Label: null, Prediction: request
+
+Utterance: im looking for a restaurant in the north part of town serving french type of food
+Label: request, Prediction: inform
+
+
+---------------------
+--Hardest dialogue acts for all models
+ack -- average F1 = 0.14652014652014653
+deny -- average F1 = 0.4054376657824934
+repeat -- average F1 = 0.5441077441077441
+reqmore -- average F1 = 0.611111111111111
+bye -- average F1 = 0.6208222335597176
+null -- average F1 = 0.6256770026179831
+restart -- average F1 = 0.6666666666666666
+confirm -- average F1 = 0.6667574984539271
+thankyou -- average F1 = 0.7104604197073828
+reqalts -- average F1 = 0.7845834379461992
+hello -- average F1 = 0.7885057471264368
+affirm -- average F1 = 0.8092731626149471
+request -- average F1 = 0.8107326074468965
+negate -- average F1 = 0.8230964963789392
+inform -- average F1 = 0.8885800180322385
+
+---------------------
+--Utterances that went wrong for all models
+Utterance: in the cheap price range
+Label: request, Prediction: ['inform' 'inform' 'inform' 'inform' 'inform' 'inform']
+
+Utterance: okay and what about the address
+Label: ack, Prediction: ['request' 'inform' 'request' 'request' 'request' 'request']
+
+Utterance: anything house
+Label: reqalts, Prediction: ['inform' 'inform' 'inform' 'inform' 'inform' 'inform']
+
+
+---------------------
+--Difficult Cases
+--Model: Rule-based baseline
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: inform
+Utterance: i need mre informations, Label: reqmore Prediction: inform
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: reqalts
+Utterance: i don't need other suggestions, Label: deny Prediction: reqalts
+--Model: Majority baseline
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: inform
+Utterance: i need mre informations, Label: reqmore Prediction: inform
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: inform
+Utterance: i don't need other suggestions, Label: deny Prediction: inform
+--Model: Sequential ML trained on original data
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: null
+Utterance: i need mre informations, Label: reqmore Prediction: null
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: null
+Utterance: i don't need other suggestions, Label: deny Prediction: null
+--Model: Sequential ML trained on deduplicated data
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: null
+Utterance: i need mre informations, Label: reqmore Prediction: inform
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: inform
+Utterance: i don't need other suggestions, Label: deny Prediction: inform
+--Model: Logreg ML trained on original data
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: null
+Utterance: i need mre informations, Label: reqmore Prediction: null
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: null
+Utterance: i don't need other suggestions, Label: deny Prediction: null
+--Model: Logreg ML trained on deduplicated data
+Utterance: cna you find an italian restaurant, Label: request Prediction: inform
+Utterance: coul u send me the adress?, Label: request Prediction: null
+Utterance: i need mre informations, Label: reqmore Prediction: null
+Utterance: i don't want italian restaurant, Label: deny Prediction: inform
+Utterance: i don't want other information, Label: deny Prediction: null
+Utterance: i don't need other suggestions, Label: deny Prediction: null
+
+-UTTERANCE LENGTH ANALYSIS
+
+=== OVERALL LENGTH STATISTICS ===
+Average utterance length: 3.72 words
+Standard deviation: 2.90
+Range: 1 - 18 words
+
+=== LENGTH ANALYSIS PER MODEL ===
+
+--Rule-based baseline:
+  Correct predictions: 3260
+    Avg length: 3.81 words (±2.93)
+  Incorrect predictions: 565
+    Avg length: 3.17 words (±2.60)
+  Difference: -0.64 words (incorrect vs correct)
+
+--Majority baseline:
+  Correct predictions: 1524
+    Avg length: 4.09 words (±3.72)
+  Incorrect predictions: 2301
+    Avg length: 3.47 words (±2.15)
+  Difference: -0.63 words (incorrect vs correct)
+
+--Sequential ML trained on original data:
+  Correct predictions: 3755
+    Avg length: 3.69 words (±2.89)
+  Incorrect predictions: 70
+    Avg length: 4.90 words (±3.11)
+  Difference: +1.21 words (incorrect vs correct)
+
+--Sequential ML trained on deduplicated data:
+  Correct predictions: 3637
+    Avg length: 3.79 words (±2.91)
+  Incorrect predictions: 188
+    Avg length: 2.27 words (±2.05)
+  Difference: -1.52 words (incorrect vs correct)
+
+--Logreg ML trained on original data:
+  Correct predictions: 3715
+    Avg length: 3.67 words (±2.87)
+  Incorrect predictions: 110
+    Avg length: 5.21 words (±3.27)
+  Difference: +1.54 words (incorrect vs correct)
+
+--Logreg ML trained on deduplicated data:
+  Correct predictions: 3675
+    Avg length: 3.71 words (±2.89)
+  Incorrect predictions: 150
+    Avg length: 3.93 words (±3.04)
+  Difference: +0.22 words (incorrect vs correct)
+  
+--1-2 words:
+  Count: 1619 utterances (42.3%)
+  Error rates:
+    Rule-based baseline: 16.06% (260/1619)
+    Majority baseline: 52.87% (856/1619)
+    Sequential ML trained on original data: 0.80% (13/1619)
+    Sequential ML trained on deduplicated data: 2.04% (33/1619)
+    Logreg ML trained on original data: 1.54% (25/1619)
+    Logreg ML trained on deduplicated data: 3.52% (57/1619)
+
+--3-4 words:
+  Count: 1247 utterances (32.6%)
+  Error rates:
+    Rule-based baseline: 14.27% (178/1247)
+    Majority baseline: 74.98% (935/1247)
+    Sequential ML trained on original data: 0.88% (11/1247)
+    Sequential ML trained on deduplicated data: 1.04% (13/1247)
+    Logreg ML trained on original data: 2.25% (28/1247)
+    Logreg ML trained on deduplicated data: 3.21% (40/1247)
+
+--5-6 words:
+  Count: 441 utterances (11.5%)
+  Error rates:
+    Rule-based baseline: 11.11% (49/441)
+    Majority baseline: 70.98% (313/441)
+    Sequential ML trained on original data: 4.76% (21/441)
+    Sequential ML trained on deduplicated data: 4.31% (19/441)
+    Logreg ML trained on original data: 4.54% (20/441)
+    Logreg ML trained on deduplicated data: 5.22% (23/441)
+
+--7+ words:
+  Count: 518 utterances (13.5%)
+  Error rates:
+    Rule-based baseline: 15.06% (78/518)
+    Majority baseline: 38.03% (197/518)
+    Sequential ML trained on original data: 3.67% (19/518)
+    Sequential ML trained on deduplicated data: 2.70% (14/518)
+    Logreg ML trained on original data: 7.14% (37/518)
+    Logreg ML trained on deduplicated data: 5.79% (30/518)

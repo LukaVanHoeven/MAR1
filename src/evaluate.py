@@ -3,15 +3,15 @@ from .rulebased import rulebased
 from .sequential import sequential
 from .logistic_regression import logreg
 from collections import defaultdict
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 from typing import Callable
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
-
-def error_analysis(data: pd.DataFrame, models: list[str])-> None:
+def error_analysis(data: pd.DataFrame, models: list[str]) -> None:
     """
     performs the error analysis on the given `data`, for the given 
     `models`. The error analysis consists of:
@@ -19,6 +19,7 @@ def error_analysis(data: pd.DataFrame, models: list[str])-> None:
         - Finding the hardest utterances to classify for each model.
         - Finding the hardest dialogue acts to classify for all models.
         - Finding the hardest utterances to classify for all models.
+        - Analyzing the relationship between utterance length and errors.
     
     @param data (pd.Dataframe): Dataframe containing all user utterances
         and their corresponding labels.
@@ -54,7 +55,6 @@ def error_analysis(data: pd.DataFrame, models: list[str])-> None:
         report = classification_report(labels, prediction, output_dict=True, zero_division=0)
         
         # Difficult dialogue acts per model
-        # Chosen for f1 since it takes both recall and precision into account
         sorted_report = sorted(
             [
                 (
@@ -101,6 +101,11 @@ def error_analysis(data: pd.DataFrame, models: list[str])-> None:
         if all(pred != label for pred in all_sentence_preds):
             hard_utterances.append((sentences[i], label, all_sentence_preds))
 
+    # NEW: Utterance length analysis
+    length_analysis_results = analyze_utterance_length(
+        sentences, labels, predictions, models
+    )
+
     # Printing
     # Hardest dialogue acts per model
     print("\n---------------------")
@@ -113,7 +118,6 @@ def error_analysis(data: pd.DataFrame, models: list[str])-> None:
     print("\n---------------------")
     for model in models:
         print(f"--Hardest utterances for {model}")
-        # Only show the 3 most difficult
         for utterance, label, prediction in difficult_utterances[model][:3]:
             print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
 
@@ -129,11 +133,237 @@ def error_analysis(data: pd.DataFrame, models: list[str])-> None:
     for utterance, label, prediction in hard_utterances:
         print(f"Utterance: {utterance}\nLabel: {label}, Prediction: {prediction}\n")
 
+    # NEW: Print utterance length analysis
+    print("\n---------------------")
+    print("--UTTERANCE LENGTH ANALYSIS")
+    print_length_analysis(length_analysis_results, models)
+    
+    # NEW: Optional - create visualizations
+    plot_length_analysis(length_analysis_results, models)
 
+
+def analyze_utterance_length(
+    sentences: list[str],
+    labels: list[str],
+    predictions: np.ndarray,
+    models: list[str]
+) -> dict:
+    """
+    Analyzes the relationship between utterance length and classification errors.
+    
+    @param sentences (list[str]): List of all utterances
+    @param labels (list[str]): List of true labels
+    @param predictions (np.ndarray): Array of predictions from all models
+    @param models (list[str]): List of model names
+    @return dict: Dictionary containing length analysis results
+    """
+    # Calculate utterance lengths (in words)
+    lengths = [len(s.split()) for s in sentences]
+    
+    results = {
+        'overall_stats': {},
+        'per_model': {},
+        'length_bins': {}
+    }
+    
+    # Overall statistics
+    results['overall_stats'] = {
+        'avg_length_all': np.mean(lengths),
+        'std_length_all': np.std(lengths),
+        'min_length': min(lengths),
+        'max_length': max(lengths)
+    }
+    
+    # Per-model analysis
+    for i, model in enumerate(models):
+        model_predictions = predictions[i]
+        
+        # Separate correct and incorrect predictions
+        correct_indices = [j for j in range(len(labels)) if labels[j] == model_predictions[j]]
+        incorrect_indices = [j for j in range(len(labels)) if labels[j] != model_predictions[j]]
+        
+        correct_lengths = [lengths[j] for j in correct_indices]
+        incorrect_lengths = [lengths[j] for j in incorrect_indices]
+        
+        results['per_model'][model] = {
+            'avg_length_correct': np.mean(correct_lengths) if correct_lengths else 0,
+            'avg_length_incorrect': np.mean(incorrect_lengths) if incorrect_lengths else 0,
+            'std_length_correct': np.std(correct_lengths) if correct_lengths else 0,
+            'std_length_incorrect': np.std(incorrect_lengths) if incorrect_lengths else 0,
+            'num_correct': len(correct_indices),
+            'num_incorrect': len(incorrect_indices),
+            'correct_lengths': correct_lengths,
+            'incorrect_lengths': incorrect_lengths
+        }
+    
+    # Length bin analysis (group by length ranges)
+    length_bins = {
+        '1-2 words': (1, 2),
+        '3-4 words': (3, 4),
+        '5-6 words': (5, 6),
+        '7+ words': (7, float('inf'))
+    }
+    
+    for bin_name, (min_len, max_len) in length_bins.items():
+        bin_indices = [
+            i for i in range(len(lengths)) 
+            if min_len <= lengths[i] <= max_len
+        ]
+        
+        if not bin_indices:
+            continue
+            
+        results['length_bins'][bin_name] = {
+            'count': len(bin_indices),
+            'percentage': len(bin_indices) / len(lengths) * 100
+        }
+        
+        # Error rate per model for this length bin
+        for i, model in enumerate(models):
+            model_predictions = predictions[i]
+            errors_in_bin = sum(
+                1 for j in bin_indices 
+                if labels[j] != model_predictions[j]
+            )
+            error_rate = errors_in_bin / len(bin_indices) if bin_indices else 0
+            
+            if 'models' not in results['length_bins'][bin_name]:
+                results['length_bins'][bin_name]['models'] = {}
+            
+            results['length_bins'][bin_name]['models'][model] = {
+                'errors': errors_in_bin,
+                'error_rate': error_rate
+            }
+    
+    return results
+
+
+def print_length_analysis(results: dict, models: list[str]) -> None:
+    """
+    Prints the utterance length analysis results in a readable format.
+    
+    @param results (dict): Results from analyze_utterance_length
+    @param models (list[str]): List of model names
+    """
+    print("\n=== OVERALL LENGTH STATISTICS ===")
+    stats = results['overall_stats']
+    print(f"Average utterance length: {stats['avg_length_all']:.2f} words")
+    print(f"Standard deviation: {stats['std_length_all']:.2f}")
+    print(f"Range: {stats['min_length']} - {stats['max_length']} words")
+    
+    print("\n=== LENGTH ANALYSIS PER MODEL ===")
+    for model in models:
+        model_stats = results['per_model'][model]
+        print(f"\n--{model}:")
+        print(f"  Correct predictions: {model_stats['num_correct']}")
+        print(f"    Avg length: {model_stats['avg_length_correct']:.2f} words (±{model_stats['std_length_correct']:.2f})")
+        print(f"  Incorrect predictions: {model_stats['num_incorrect']}")
+        print(f"    Avg length: {model_stats['avg_length_incorrect']:.2f} words (±{model_stats['std_length_incorrect']:.2f})")
+        
+        if model_stats['num_incorrect'] > 0:
+            diff = model_stats['avg_length_incorrect'] - model_stats['avg_length_correct']
+            print(f"  Difference: {diff:+.2f} words (incorrect vs correct)")
+    
+    print("\n=== ERROR RATE BY LENGTH BINS ===")
+    for bin_name in results['length_bins']:
+        bin_data = results['length_bins'][bin_name]
+        print(f"\n--{bin_name}:")
+        print(f"  Count: {bin_data['count']} utterances ({bin_data['percentage']:.1f}%)")
+        print("  Error rates:")
+        for model in models:
+            if model in bin_data['models']:
+                model_data = bin_data['models'][model]
+                print(f"    {model}: {model_data['error_rate']*100:.2f}% ({model_data['errors']}/{bin_data['count']})")
+
+
+def plot_length_analysis(results: dict, models: list[str]) -> None:
+    """
+    Creates visualizations for the utterance length analysis.
+    
+    @param results (dict): Results from analyze_utterance_length
+    @param models (list[str]): List of model names
+    """
+    # Create figure with subplots
+    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+    
+    # Plot 1: Average length comparison (correct vs incorrect)
+    ax1 = axes[0, 0]
+    x = np.arange(len(models))
+    width = 0.35
+    
+    correct_avgs = [results['per_model'][m]['avg_length_correct'] for m in models]
+    incorrect_avgs = [results['per_model'][m]['avg_length_incorrect'] for m in models]
+    
+    ax1.bar(x - width/2, correct_avgs, width, label='Correct', alpha=0.8)
+    ax1.bar(x + width/2, incorrect_avgs, width, label='Incorrect', alpha=0.8)
+    ax1.set_xlabel('Models')
+    ax1.set_ylabel('Average Length (words)')
+    ax1.set_title('Average Utterance Length: Correct vs Incorrect Predictions')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(models, rotation=45, ha='right')
+    ax1.legend()
+    ax1.grid(axis='y', alpha=0.3)
+    
+    # Plot 2: Error rate by length bins
+    ax2 = axes[0, 1]
+    bins = list(results['length_bins'].keys())
+    
+    for model in models:
+        error_rates = [
+            results['length_bins'][bin_name]['models'][model]['error_rate'] * 100
+            for bin_name in bins if model in results['length_bins'][bin_name]['models']
+        ]
+        ax2.plot(bins[:len(error_rates)], error_rates, marker='o', label=model)
+    
+    ax2.set_xlabel('Utterance Length Bin')
+    ax2.set_ylabel('Error Rate (%)')
+    ax2.set_title('Error Rate by Utterance Length')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    
+    # Plot 3: Distribution of lengths for correct vs incorrect
+    ax3 = axes[1, 0]
+    
+    # Pick one model for detailed distribution (e.g., best performing)
+    model_to_plot = models[2] if len(models) > 2 else models[0]  # Adjust as needed
+    correct_lens = results['per_model'][model_to_plot]['correct_lengths']
+    incorrect_lens = results['per_model'][model_to_plot]['incorrect_lengths']
+    
+    ax3.hist([correct_lens, incorrect_lens], bins=range(1, 15), 
+             label=['Correct', 'Incorrect'], alpha=0.7)
+    ax3.set_xlabel('Utterance Length (words)')
+    ax3.set_ylabel('Frequency')
+    ax3.set_title(f'Length Distribution: {model_to_plot}')
+    ax3.legend()
+    ax3.grid(axis='y', alpha=0.3)
+    
+    # Plot 4: Distribution of utterances across length bins
+    ax4 = axes[1, 1]
+    bin_counts = [results['length_bins'][b]['count'] for b in bins]
+    bin_percentages = [results['length_bins'][b]['percentage'] for b in bins]
+    
+    ax4.bar(bins, bin_counts, alpha=0.8)
+    ax4.set_xlabel('Utterance Length Bin')
+    ax4.set_ylabel('Number of Utterances')
+    ax4.set_title('Distribution of Utterances by Length')
+    
+    # Add percentage labels on bars
+    for i, (count, pct) in enumerate(zip(bin_counts, bin_percentages)):
+        ax4.text(i, count, f'{pct:.1f}%', ha='center', va='bottom')
+    
+    ax4.grid(axis='y', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('utterance_length_analysis.png', dpi=300, bbox_inches='tight')
+    print("\nVisualization saved as 'utterance_length_analysis.png'")
+    plt.show()
+
+
+# Keep the existing functions unchanged
 def difficult_cases(
     utterances_difficult_cases: dict[str:str],
     models: list[str]
-)-> None:
+) -> None:
     """
     Evaluate all the given `models` on the given difficult cases. This 
     function prints per model the user utterance, the expected label and
@@ -166,8 +396,6 @@ def difficult_cases(
         logreg(utterances, model_folder / "logreg_dedup.joblib")
     ])
 
-    #comparing of the same utterance across all models
-    #showing the true label and each model's predicted label
     print("\n---------------------")
     print("--Difficult Cases")
     for i in range(len(models)):
@@ -178,12 +406,12 @@ def difficult_cases(
                 f"Utterance: {utterances[j]}, Label: {labels[j]} " \
                 f"Prediction: {pred_system[j]}"
             )
-        
+
 
 def accuracy_baseline(
     func: Callable[[str], str],
     testset: pd.DataFrame
-)-> float:
+) -> float:
     """
     Calculates the accuracy of a baseline model.
 
@@ -205,9 +433,9 @@ def accuracy_ML(
     func: Callable[[list[str], str, str], list[str]],
     testset: pd.DataFrame,
     model: str,
-    tokenizer: str="sequential_dedup.pickle",
-    sequential: bool=True
-)-> float:
+    tokenizer: str = "sequential_dedup.pickle",
+    sequential: bool = True
+) -> tuple[float, any]:
     """
     Calculates the accuracy of a either a sequential or a logistic 
     regression machine learning model.
@@ -225,6 +453,7 @@ def accuracy_ML(
     @param sequential (bool): If True calculate the accuracy of a
         sequential model. If False do so for a linear regression model.
     """
+    
     if sequential:
         predictions = func(testset["text"].tolist(), model, tokenizer)
     else: 
@@ -235,5 +464,5 @@ def accuracy_ML(
     for pred, label in zip(predictions, testset["label"].tolist()):
         if pred == label:
             correct += 1
-
-    return round(correct / len(predictions), 4)
+    cm = confusion_matrix(testset["label"].tolist(), predictions)
+    return round(correct / len(predictions), 4), cm
