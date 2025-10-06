@@ -61,7 +61,7 @@ def assignment1a()-> None:
     
     f1_score_sequential_dedup = history_sequential_dedup.history['val_accuracy'][-1]
     plot_loss(history_sequential_dedup)
-    model_logreg_orig, logreg_history_orig = train_logreg(
+    model_logreg_orig = train_logreg(
         data_folder / "train_orig.csv",
         data_folder / "test_orig.csv",
         model_folder / "logreg_orig.joblib",
@@ -69,8 +69,7 @@ def assignment1a()-> None:
         1,
         1
     )
-    f1_score_logreg_orig = logreg_history_orig.history['val_accuracy'][-1]
-    model_logreg_dedup, logreg_history_dedup = train_logreg(
+    model_logreg_dedup = train_logreg(
         data_folder / "train_dedup.csv",
         data_folder / "test_dedup.csv",
         model_folder / "logreg_dedup.joblib",
@@ -78,7 +77,6 @@ def assignment1a()-> None:
         1,
         1
     )
-    f1_score_logreg_dedup = logreg_history_dedup.history['val_accuracy'][-1]
 
     # Load testsets
     orig_test = pd.read_csv(
@@ -99,8 +97,6 @@ def assignment1a()-> None:
 
     acc_sequential_orig, cm_sequential_orig = accuracy_ML(sequential, orig_test, model_sequential_orig, tokenizer_sequential_orig, True)
     acc_sequential_dedup, cm_sequential_dedup = accuracy_ML(sequential, dedup_test, model_sequential_dedup, tokenizer_sequential_dedup, True)
-    show_confusion_matrix(cm_sequential_orig)
-    show_confusion_matrix(cm_sequential_dedup)
     acc_logreg_orig, cm_logreg_orig = accuracy_ML(logreg, orig_test, model_logreg_orig, None, False)
     acc_logreg_dedup, cm_logreg_dedup = accuracy_ML(logreg, dedup_test, model_logreg_dedup, None, False)
 
@@ -112,7 +108,6 @@ def assignment1a()-> None:
     print(f"Sequential ML = {acc_sequential_orig * 100}%")
     print(f"Sequential ML F1-score = {f1_score_sequential_orig * 100}%")
     print(f"Logreg ML = {acc_logreg_orig * 100}%")
-    print(f"Logreg ML F1-score = {f1_score_logreg_orig * 100}%")
 
     print("Model accuracies on models trained/tested on deduplicated data")
     print(f"Rule-based baseline = {acc_rulebased_dedup * 100}%")
@@ -120,7 +115,6 @@ def assignment1a()-> None:
     print(f"Sequential ML = {acc_sequential_dedup * 100}%")
     print(f"Sequential ML F1-score = {f1_score_sequential_dedup * 100}%")
     print(f"Logreg ML = {acc_logreg_dedup * 100}%")
-    print(f"Logreg ML F1-score = {f1_score_logreg_dedup * 100}%")
     print("---------------------\n")
 
     models = [

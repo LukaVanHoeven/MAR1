@@ -3,7 +3,7 @@ from .rulebased import rulebased
 from .sequential import sequential
 from .logistic_regression import logreg
 from collections import defaultdict
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from typing import Callable
 from pathlib import Path
 
@@ -425,7 +425,8 @@ def accuracy_baseline(
     for _, row in testset.iterrows():
         if func(row['text']) == row['label']:
             correct += 1
-
+    f1_score_model = f1_score(testset["label"].tolist(), [func(row['text']) for _, row in testset.iterrows()], average='weighted', zero_division=0)
+    print("F1score for baseline model", f1_score_model)
     return round(correct / testset.shape[0], 4)
 
 
@@ -465,4 +466,6 @@ def accuracy_ML(
         if pred == label:
             correct += 1
     cm = confusion_matrix(testset["label"].tolist(), predictions)
+    f1_score_model = f1_score(testset["label"].tolist(), predictions, average='weighted', zero_division=0)
+    print("F1score for model", model, f1_score_model)
     return round(correct / len(predictions), 4), cm

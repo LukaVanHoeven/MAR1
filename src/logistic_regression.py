@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 import joblib
 import scipy
 import sklearn
+from sklearn.metrics import f1_score
 
 
 def build_features(
@@ -122,7 +123,7 @@ def train_logreg(
     # Save bundle
     joblib.dump({"model": clf, "word_vec": wv, "char_vec": cv, "labels_order": labels_order}, out_model)
 
-    return out_model, history
+    return out_model
 
 def logreg(data: list[str], model_path: str)-> list[str]:
     """
@@ -142,5 +143,5 @@ def logreg(data: list[str], model_path: str)-> list[str]:
     Xw = wv.transform(data)
     
     pred = clf.predict(Xw)
-    
+
     return pred
