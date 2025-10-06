@@ -115,14 +115,14 @@ def train_logreg(
         max_iter=1000,
         class_weight="balanced"
     )
-    clf.fit(Xtr, ytr)
+    history = clf.fit(Xtr, ytr)
 
     labels_order = train_df["label"].value_counts().index.tolist()
 
     # Save bundle
     joblib.dump({"model": clf, "word_vec": wv, "char_vec": cv, "labels_order": labels_order}, out_model)
 
-    return out_model
+    return out_model, history
 
 def logreg(data: list[str], model_path: str)-> list[str]:
     """

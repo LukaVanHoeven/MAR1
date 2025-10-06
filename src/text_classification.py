@@ -61,7 +61,7 @@ def assignment1a()-> None:
     
     f1_score_sequential_dedup = history_sequential_dedup.history['val_accuracy'][-1]
     plot_loss(history_sequential_dedup)
-    model_logreg_orig = train_logreg(
+    model_logreg_orig, logreg_history_orig = train_logreg(
         data_folder / "train_orig.csv",
         data_folder / "test_orig.csv",
         model_folder / "logreg_orig.joblib",
@@ -69,7 +69,8 @@ def assignment1a()-> None:
         1,
         1
     )
-    model_logreg_dedup = train_logreg(
+    f1_score_logreg_orig = logreg_history_orig.history['val_accuracy'][-1]
+    model_logreg_dedup, logreg_history_dedup = train_logreg(
         data_folder / "train_dedup.csv",
         data_folder / "test_dedup.csv",
         model_folder / "logreg_dedup.joblib",
@@ -77,6 +78,7 @@ def assignment1a()-> None:
         1,
         1
     )
+    f1_score_logreg_dedup = logreg_history_dedup.history['val_accuracy'][-1]
 
     # Load testsets
     orig_test = pd.read_csv(
@@ -110,6 +112,7 @@ def assignment1a()-> None:
     print(f"Sequential ML = {acc_sequential_orig * 100}%")
     print(f"Sequential ML F1-score = {f1_score_sequential_orig * 100}%")
     print(f"Logreg ML = {acc_logreg_orig * 100}%")
+    print(f"Logreg ML F1-score = {f1_score_logreg_orig * 100}%")
 
     print("Model accuracies on models trained/tested on deduplicated data")
     print(f"Rule-based baseline = {acc_rulebased_dedup * 100}%")
@@ -117,6 +120,7 @@ def assignment1a()-> None:
     print(f"Sequential ML = {acc_sequential_dedup * 100}%")
     print(f"Sequential ML F1-score = {f1_score_sequential_dedup * 100}%")
     print(f"Logreg ML = {acc_logreg_dedup * 100}%")
+    print(f"Logreg ML F1-score = {f1_score_logreg_dedup * 100}%")
     print("---------------------\n")
 
     models = [
