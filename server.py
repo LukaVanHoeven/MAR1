@@ -1,7 +1,6 @@
 import asyncio
 import websockets
 import os
-import json
 from src.restaurant_recommendation import recommendation
 
 async def echo(websocket):  # Removed 'path' parameter as it's no longer needed in newer websockets versions
