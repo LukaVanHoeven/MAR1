@@ -4,7 +4,7 @@ class WebSocketSingleton {
   public socket: WebSocket;
 
   private constructor() {
-    this.socket = new WebSocket("ws://restaurant.lukahoef.nl/ws");
+    this.socket = new WebSocket("wss://restaurant.lukahoef.nl/ws");
 
     this.socket.onopen = () => {
       console.log("WebSocket connection established");
