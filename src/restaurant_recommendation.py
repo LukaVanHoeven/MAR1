@@ -1,11 +1,10 @@
 import argparse
 from .transition import Transition
 from .sequential import train_sequential, sequential
-from .dialogue_management_system import Dialogue_management_system
 import pandas as pd
 
 
-def recommendation()-> None:
+def recommendation()-> object:
     """
     Runs the restaurant recommendation dialogue management system. The 
     diagram this was based on is found in the `diagrams` folder.
@@ -43,6 +42,12 @@ def recommendation()-> None:
         action="store_true",
         default=False,
         help="Use a baseline model instead of a Machine Learning model."
+    )
+    parser.add_argument(
+        "--use_websockets",
+        action="store_true",
+        default=False,
+        help="Use WebSockets for communication (default: False)."
     )
     args = parser.parse_args()
 
@@ -104,13 +109,29 @@ def recommendation()-> None:
         orig_train = pd.read_csv("train_orig.csv")
         train_sequential("sequential_orig", orig_train)
     
-    dms = Dialogue_management_system(
+    if args.use_websockets:
+        from .dialogue_management_server import Dialogue_Management_Server as Dialogue_management_system
+        dms = Dialogue_management_system(
         sequential,
         transitions,
         "welcome",
         args.allow_preference_change,
         args.all_caps,
         args.system_delay
-    )
-    dms.loop()
+        )
+        return dms
+    
+    else:
+        from .dialogue_management_system import Dialogue_management_system
+        dms = Dialogue_management_system(
+        sequential,
+        transitions,
+        "welcome",
+        args.allow_preference_change,
+        args.all_caps,
+        args.system_delay
+        )
+        dms.loop()
+        return dms
+    
     
