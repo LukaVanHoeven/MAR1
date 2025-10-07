@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 8090
 
 # Set entrypoint
-CMD ["python", "server.py"]
+CMD ["python", "server.py", "--use_websockets"]
