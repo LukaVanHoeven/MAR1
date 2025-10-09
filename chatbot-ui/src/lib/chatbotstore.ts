@@ -1,5 +1,4 @@
 // src/stores/chatbotStore.ts
-import { Chat } from "@/pages/chat/chat";
 import { create } from "zustand";
 
 export interface ChatMessage {
