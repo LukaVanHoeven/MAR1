@@ -4,69 +4,54 @@ import {
   ThinkingMessage,
 } from "../../components/custom/message";
 import { useScrollToBottom } from "@/components/custom/use-scroll-to-bottom";
-import { useState, useEffect, useRef } from "react";
-import { message } from "../../interfaces/interfaces";
+import { useState, useEffect } from "react";
 import { Overview } from "@/components/custom/overview";
 import { Header } from "@/components/custom/header";
-import { v4 as uuidv4 } from "uuid";
 import { WebSocketClient } from "@/lib/websocket";
+import { ChatMessage, useChatbotStore } from "@/lib/chatbotstore";
 
 export function Chat() {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
-  const [messages, setMessages] = useState<message[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showReset, setShowReset] = useState<boolean>(false);
-  const currentBufferRef = useRef("");
-  const currentTraceIdRef = useRef("");
+
+  const {
+    messages,
+    showReset,
+    addMessage,
+    appendToBuffer,
+    flushBuffer,
+    setShowReset,
+    clearMessages,
+  } = useChatbotStore();
 
   useEffect(() => {
-    WebSocketClient.onMessage((data) => {
+    const handleMessage = (data: string) => {
       if (data === "[END]") {
         setIsLoading(false);
-        const newMessage = currentBufferRef.current;
-        setMessages((prev) => [
-          ...prev,
-          {
-            content: newMessage,
-            role: "assistant",
-            id: currentTraceIdRef.current,
-          },
-        ]);
-        currentBufferRef.current = "";
-        currentTraceIdRef.current = "";
+        flushBuffer();
       } else if (data === "[ENDCONVO]") {
         setIsLoading(false);
         setShowReset(true);
       } else {
-        currentBufferRef.current += data;
+        appendToBuffer(data);
       }
-    });
-  }, []);
+    };
+
+    const cleanup = WebSocketClient.onMessage(handleMessage);
+    return cleanup;
+  }, [flushBuffer, setShowReset, appendToBuffer]);
 
   const resetMessages = () => {
-    setMessages([
-      {
-        content:
-          "Hello, welcome to the Cambridge restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?",
-        role: "assistant",
-        id: currentTraceIdRef.current,
-      },
-    ]);
+    clearMessages();
     setShowReset(false);
   };
+
   const handleSubmit = () => {
     if (!question.trim()) return;
 
-    const traceId = uuidv4();
-    setMessages((prev) => [
-      ...prev,
-      { content: question, role: "user", id: traceId },
-    ]);
-    currentTraceIdRef.current = traceId;
-    currentBufferRef.current = "";
-
+    addMessage(question, "user");
     WebSocketClient.sendMessage(question);
 
     setQuestion("");
@@ -81,8 +66,8 @@ export function Chat() {
         ref={messagesContainerRef}
       >
         {messages.length === 0 && <Overview />}
-        {messages.map((message, index) => (
-          <PreviewMessage key={index} message={message} />
+        {messages.map((message: ChatMessage) => (
+          <PreviewMessage key={message.id} message={message} />
         ))}
         {isLoading && <ThinkingMessage />}
         <div
